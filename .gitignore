@@ -29,6 +29,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
+*.log
+agent_debug.log
 
 # 临时文件
 *.tmp

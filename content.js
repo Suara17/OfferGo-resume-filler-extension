@@ -481,85 +481,85 @@ function getContextSection(el) {
   return null;
 }
 
+// 获取输入框最直接、最精准的关联标签 (Direct Label)，彻底杜绝父级/祖先容器的大标题污染
+function getElementDirectLabel(element) {
+  if (!element) return "";
+
+  // 1. 标准 label[for] 关联
+  if (element.id) {
+    try {
+      const l = document.querySelector(`label[for="${CSS.escape(element.id)}"]`);
+      if (l) {
+        const text = (l.innerText || l.textContent || "").trim();
+        if (text && text.length < 35) return text.replace(/[:：\*]/g, '').trim();
+      }
+    } catch(e) {}
+  }
+
+  // 2. 被 label 直接包裹
+  const parentLabel = element.closest('label');
+  if (parentLabel) {
+    const text = (parentLabel.innerText || parentLabel.textContent || "").trim();
+    if (text && text.length < 35) return text.replace(/[:：\*]/g, '').trim();
+  }
+
+  // 3. 直接前置兄弟节点或前一个具有文本的兄弟
+  let prev = element.previousElementSibling;
+  while (prev) {
+    const text = (prev.innerText || prev.textContent || "").trim();
+    if (text && text.length > 0 && text.length < 30) {
+      return text.replace(/[:：\*]/g, '').trim();
+    }
+    prev = prev.previousElementSibling;
+  }
+
+  // 4. 适配主流招聘系统 (Moka/北森/飞书/AntD/Element) 的直接 form-item 表单项内部标签
+  const formItem = element.closest('.form-item, .form-group, [class*="form-item" i], [class*="form-group" i], [class*="field" i], tr');
+  if (formItem) {
+    const directLabelEl = formItem.querySelector('label, [class*="label" i], th');
+    if (directLabelEl && !directLabelEl.contains(element)) {
+      const text = (directLabelEl.innerText || directLabelEl.textContent || "").trim();
+      if (text && text.length > 0 && text.length < 35) {
+        return text.replace(/[:：\*]/g, '').trim();
+      }
+    }
+  }
+
+  return "";
+}
+
 // 获取输入框周围的所有文本线索，用来做模糊识别
 function getElementClues(element) {
   let clues = [];
   
-  if (element.placeholder) clues.push(element.placeholder.toLowerCase());
-  if (element.name) clues.push(element.name.toLowerCase());
-  if (element.id) clues.push(element.id.toLowerCase());
-  
-  // 1. 标准 label[for] 匹配
-  if (element.id) {
-    const labels = document.querySelectorAll(`label[for="${element.id}"]`);
-    labels.forEach(l => clues.push(l.textContent.toLowerCase()));
-  }
-  
-  // 2. 被 label 包裹匹配
-  const parentLabel = element.closest('label');
-  if (parentLabel) clues.push(parentLabel.textContent.toLowerCase());
-  
-  // 3. 前置兄弟节点文本
-  let prev = element.previousSibling;
-  if (prev) {
-    const text = prev.textContent ? prev.textContent.trim() : (prev.nodeValue ? prev.nodeValue.trim() : "");
-    if (text) clues.push(text.toLowerCase());
-  }
-  let prevEl = element.previousElementSibling;
-  if (prevEl) {
-    clues.push(prevEl.textContent.toLowerCase());
+  const directLabel = getElementDirectLabel(element);
+  if (directLabel) {
+    clues.push(directLabel.toLowerCase());
   }
 
-  // 4. 后置兄弟节点文本 (如 [下拉框] 年, [下拉框] 月, 至, 到, -- 等关键线索)
+  if (element.placeholder) {
+    clues.push(element.placeholder.toLowerCase());
+  }
+  if (element.name) {
+    clues.push(element.name.toLowerCase());
+  }
+  if (element.id) {
+    clues.push(element.id.toLowerCase());
+  }
+  if (element.getAttribute("aria-label")) {
+    clues.push(element.getAttribute("aria-label").toLowerCase());
+  }
+  
+  // 后置兄弟节点文本 (如 [下拉框] 年, [下拉框] 月, 至, 到, -- 等关键线索)
   let next = element.nextSibling;
   if (next) {
     const text = next.textContent ? next.textContent.trim() : (next.nodeValue ? next.nodeValue.trim() : "");
-    if (text) clues.push(text.toLowerCase());
+    if (text && text.length < 20) clues.push(text.toLowerCase());
   }
   let nextEl = element.nextElementSibling;
   if (nextEl) {
-    clues.push(nextEl.textContent.toLowerCase());
-  }
-  
-  // 5. 向上追溯层级，查找相关容器内的 Label/Title 文本与兄弟 Label 容器 (全面适配北森/大易 phoenix__form-item, AntD, Element 等)
-  let current = element.parentElement;
-  let steps = 0;
-  while (current && current !== document.body && steps < 6) {
-    const className = (current.className || '').toString().toLowerCase();
-    const idName = (current.id || '').toString().toLowerCase();
-
-    // 关键穿透：检查当前父节点的前置兄弟节点 (如北森 form-item-control 前方的 form-item-label)
-    let sibling = current.previousElementSibling;
-    let sCount = 0;
-    while (sibling && sCount < 2) {
-      const sText = sibling.textContent ? sibling.textContent.trim() : "";
-      if (sText && sText.length < 80) {
-        clues.push(sText.toLowerCase());
-      }
-      sibling = sibling.previousElementSibling;
-      sCount++;
-    }
-
-    // 在当前容器下寻找标签文本 (匹配各大 ATS 系统的标签与标题类名)
-    const labelsInGroup = (current && typeof current.querySelectorAll === "function") ? current.querySelectorAll('label, [class*="label" i], [class*="title" i], [class*="header" i], [class*="name" i], th, legend') : [];
-    let foundLabel = false;
-    labelsInGroup.forEach(l => {
-      if (l !== element) {
-        const text = l.textContent ? l.textContent.trim() : "";
-        if (text && text.length < 80) {
-          clues.push(text.toLowerCase());
-          foundLabel = true;
-        }
-      }
-    });
-    
-    // 只有真正抓取到了有意义的标签文本，或者到达了顶级 FORM 标签，才停止向上，避免在纯控件包裹层 premature break
-    if (foundLabel || current.tagName === 'FORM') {
-      break;
-    }
-    
-    current = current.parentElement;
-    steps++;
+    const text = (nextEl.innerText || nextEl.textContent || "").trim();
+    if (text && text.length < 20) clues.push(text.toLowerCase());
   }
 
   // 过滤特殊字符并移除多余空字符
@@ -1624,6 +1624,384 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
+// ==================== 大模型驱动的高精度表单拓扑分析与字段映射引擎 ====================
+
+// 页面表单字段的 AI 映射缓存: Map<string (fieldId/hash), { slot: string, confidence: number, label: string, reason: string }>
+const aiFieldMappingCache = new Map();
+let isAiPageScanning = false;
+let lastAiScanUrl = "";
+
+// 生成元素稳定特征哈希/唯一标识
+function getElementStableFingerprint(el) {
+  if (!el) return "";
+  if (el.getAttribute("data-rf-fid")) return el.getAttribute("data-rf-fid");
+
+  const name = el.name || "";
+  const id = el.id || "";
+  const placeholder = el.placeholder || "";
+  const type = el.type || el.tagName.toLowerCase();
+  
+  // 计算输入框在文档中的大致序号
+  const allInputs = Array.from(document.querySelectorAll("input, textarea, select, [contenteditable='true']"));
+  const idx = allInputs.indexOf(el);
+
+  const raw = `${idx}_${type}_${name}_${id}_${placeholder}`.replace(/[\s\t\n]+/g, "_");
+  const fid = "rf_fid_" + Math.abs(hashString(raw));
+  el.setAttribute("data-rf-fid", fid);
+  return fid;
+}
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+// 提取当前页面表单的脱敏 DOM 拓扑结构 (Zero-PII: 仅提取结构和公开Label，绝无用户个人数据)
+function extractPageDomTopology() {
+  const formControls = Array.from(document.querySelectorAll(
+    "input:not([type='hidden']):not([type='submit']):not([type='button']):not([type='reset']):not([type='file']):not([type='checkbox']):not([type='radio']), textarea, select, [contenteditable='true']"
+  ));
+
+  const items = [];
+
+  formControls.forEach((el, index) => {
+    // 忽略不可见的输入框（非渲染元素）
+    if (el.offsetWidth === 0 && el.offsetHeight === 0 && el.type !== "select-one") {
+      return;
+    }
+    // 忽略插件自身的输入框
+    if (el.closest && el.closest("#resume-filler-extension-host")) {
+      return;
+    }
+
+    const fid = getElementStableFingerprint(el);
+    const clues = getElementClues(el).slice(0, 5); // 最多取前5条关键线索
+    const breadcrumb = getElementBreadcrumbPath(el);
+    const tagName = el.tagName.toLowerCase();
+    const type = (el.type || tagName).toLowerCase();
+    const placeholder = (el.placeholder || "").trim();
+
+    // 兄弟成对线索 (例如开始时间至结束时间)
+    const siblingClue = getSiblingControlClue(el);
+
+    items.push({
+      fid,
+      tag: tagName,
+      type,
+      placeholder: placeholder.slice(0, 40),
+      breadcrumb: breadcrumb.slice(0, 80),
+      clues: clues.map(c => c.slice(0, 30)),
+      siblingClue: siblingClue ? siblingClue.slice(0, 30) : undefined
+    });
+  });
+
+  return items;
+}
+
+// 获取控件的面包屑祖先路径 (如: 申请表 > 基本信息 > 联系方式)
+function getElementBreadcrumbPath(el) {
+  const parts = [];
+  let cur = el.parentElement;
+  let depth = 0;
+  while (cur && cur !== document.body && depth < 6) {
+    // 寻找容器上的标题文本
+    const header = cur.querySelector("h1, h2, h3, h4, h5, .title, [class*='title' i], [class*='header' i], [class*='section' i], legend");
+    if (header && header !== el && !header.contains(el)) {
+      const t = (header.innerText || header.textContent || "").trim();
+      if (t && t.length < 30 && !parts.includes(t)) {
+        parts.unshift(t);
+      }
+    }
+    cur = cur.parentElement;
+    depth++;
+  }
+  return parts.join(" > ");
+}
+
+// 探测成对兄弟输入控件关系
+function getSiblingControlClue(el) {
+  const parent = el.parentElement;
+  if (!parent) return "";
+  const inputs = parent.querySelectorAll("input, select");
+  if (inputs.length === 2) {
+    if (inputs[0] === el) return "成对输入框中的第1项(如起始/省份/姓氏)";
+    if (inputs[1] === el) return "成对输入框中的第2项(如结束/城市/名字)";
+  }
+  return "";
+}
+
+// 标准简历字段槽位规范字典 (供大模型作为参考槽位列表)
+const RESUME_SCHEMA_SLOTS = `
+[基础信息 basic]
+basic.name: 候选人本人姓名
+basic.lastName: 候选人姓氏 (如: 张)
+basic.firstName: 候选人名字 (如: 三)
+basic.gender: 性别 (男/女)
+basic.birth: 出生日期/生日 (如: 2001-01-01)
+basic.phone: 本人手机号码/联系电话
+basic.email: 本人电子邮箱
+basic.idCard: 身份证号/证件号码
+basic.political: 政治面貌 (群众/团员/党员)
+basic.city: 现居城市/所在城市 (如: 北京市海淀区)
+basic.nativePlace: 籍贯/户籍地/生源地 (如: 山东济南)
+basic.residence: 现居住详细地址/通信地址
+basic.website: 个人网站/作品集链接
+basic.github: GitHub主页
+basic.jobIntent: 求职意向/申请岗位/期望职位
+basic.highestDegree: 最高学历 (博士/硕士/本科/大专)
+basic.emergencyContact: 紧急联系人姓名
+basic.emergencyRelation: 与紧急联系人关系 (如: 父母/配偶)
+basic.emergencyPhone: 紧急联系人电话
+basic.selfEval: 自我评价/自我介绍/核心优势
+basic.selfDescription: 自我描述/性格特质
+
+[教育经历 education] (支持多段: 0为最高学历，1为前置学历，如0为硕士，1为本科)
+education.0.school: 最高学历学校/院校名称
+education.0.degree: 最高学历/学位 (硕士/学士)
+education.0.major: 最高学历所学专业
+education.0.start: 入学时间 (如: 2024-09)
+education.0.end: 毕业时间 (如: 2027-06)
+education.0.startYear: 入学年份 (如: 2024)
+education.0.startMonth: 入学月份 (如: 09)
+education.0.endYear: 毕业年份 (如: 2027)
+education.0.endMonth: 毕业月份 (如: 06)
+education.0.gpa: 绩点/成绩排名
+education.0.supervisor: 导师姓名
+education.0.department: 院系/学院名称
+education.0.courses: 主修课程/核心课程
+education.0.researchDirection: 研究方向
+education.0.thesisTopic: 毕业论文/设计题目
+education.1.school: 第二段/本科学校名称
+education.1.degree: 第二段/本科学历学位
+education.1.major: 第二段/本科专业
+education.1.start: 本科入学时间
+education.1.end: 本科毕业时间
+
+[实习与工作经历 internship]
+internship.0.company: 实习/工作单位名称
+internship.0.position: 担任职位/岗位
+internship.0.start: 入职时间
+internship.0.end: 离职时间
+internship.0.desc: 工作职责与内容描述
+internship.1.company: 第二段实习公司名称
+internship.1.position: 第二段实习职位
+internship.1.desc: 第二段实习职责
+
+[项目经历 project]
+project.0.name: 项目名称
+project.0.role: 项目角色/职责
+project.0.tech: 技术栈
+project.0.desc: 项目描述/背景
+project.0.duty: 个人核心职责
+project.0.result: 项目成果/量化指标
+project.1.name: 第二个项目名称
+project.1.desc: 第二个项目描述
+
+[综合能力与荣誉]
+skills: 专业技能/IT技能描述
+languages: 外语能力/英语等级
+honors.0.name: 荣誉奖项名称
+`;
+
+// 向大模型发起整页表单拓扑映射分析 (异步非阻塞，结果写入缓存)
+async function triggerAiPageFormAnalysis() {
+  if (isAiPageScanning) return;
+  if (window.location.protocol === "file:" && !window.location.href.includes("test_page.html")) return;
+
+  const currentUrl = window.location.href.split("#")[0];
+  const items = extractPageDomTopology();
+  if (!items || items.length === 0) return;
+
+  isAiPageScanning = true;
+  lastAiScanUrl = currentUrl;
+  console.log(`[ResumeFiller AI] 开始整页表单拓扑分析，捕捉到 ${items.length} 个输入控件...`);
+
+  const systemPrompt = `你是一个顶级网页表单结构与求职简历槽位语义映射专家。
+你的任务是将招聘网申网页上的各个输入控件，精准映射到候选人简历的对应字段槽位（target_slot）上。
+
+【映射候选标准字段列表 (RESUME_SCHEMA_SLOTS)】:
+${RESUME_SCHEMA_SLOTS}
+
+【严格遵守的推理原则】:
+1. 绝对区分个人信息与他人信息：候选人本人的电话(basic.phone)、邮箱(basic.email)绝不能与紧急联系人(emergencyPhone/emergencyContact)或家庭成员混淆！
+2. 绝对区分教育经历阶段：页面排在最前/标记为最高学历的一律对应 education.0.*；排在第2个教育卡片的一律对应 education.1.*。
+3. 空间与成对关联：若两输入框成对并排(如入学与毕业，或省与市)，需根据前后顺序分别映射为 start/end 或 省/市。
+4. 无法确定的字段：target_slot 设为 "unknown"，置信度低于 0.6。
+5. 必须严格以 JSON 格式输出，不得输出任何多余废话。
+
+【输出 JSON 格式规范】:
+{
+  "mappings": [
+    {
+      "fid": "rf_fid_xxx",
+      "slot": "basic.email",
+      "confidence": 0.98,
+      "reason": "上下文为个人联系信息，控件类型为email，placeholder提示输入常用邮箱"
+    }
+  ]
+}`;
+
+  const userPrompt = `请对以下页面上的 ${items.length} 个表单输入控件进行语义对齐分析：\n` + JSON.stringify(items, null, 2);
+
+  try {
+    const resp = await new Promise((resolve) => {
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({
+          action: "callLLM",
+          payload: { prompt: userPrompt, systemPrompt, jsonMode: true }
+        }, resolve);
+      } else {
+        resolve({ success: false, error: "chrome.runtime unavailable" });
+      }
+    });
+
+    if (!resp || !resp.success) {
+      console.warn("[ResumeFiller AI] 大模型分析未完成:", resp ? resp.error : "未知错误");
+      return;
+    }
+
+    let parsed = null;
+    try {
+      parsed = JSON.parse(resp.data);
+    } catch(e) {
+      const match = resp.data.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+    }
+
+    if (parsed && Array.isArray(parsed.mappings)) {
+      let mappedCount = 0;
+      parsed.mappings.forEach((m) => {
+        if (m.fid && m.slot && m.slot !== "unknown") {
+          aiFieldMappingCache.set(m.fid, {
+            slot: m.slot,
+            confidence: m.confidence || 0.9,
+            reason: m.reason || "",
+            timestamp: Date.now()
+          });
+          mappedCount++;
+        }
+      });
+      console.log(`[ResumeFiller AI] 整页表单拓扑映射完成！成功建立 ${mappedCount} 个输入框的高精度语义绑定。`);
+      
+      // 如果当前正有输入框聚焦，通知气泡刷新
+      if (lastActiveElement && document.body.contains(lastActiveElement)) {
+        window.dispatchEvent(new CustomEvent("rf-ai-mapping-updated", { detail: { count: mappedCount } }));
+      }
+    }
+  } catch(err) {
+    console.warn("[ResumeFiller AI] 分析流程异常:", err);
+  } finally {
+    isAiPageScanning = false;
+  }
+}
+
+// 针对单个控件的即时高精度微调精修 (Micro Refinement)
+async function requestAiSingleFieldRefinement(el) {
+  if (!el) return null;
+  const fid = getElementStableFingerprint(el);
+  const clues = getElementClues(el);
+  const breadcrumb = getElementBreadcrumbPath(el);
+  const parentText = (el.parentElement ? el.parentElement.innerText || el.parentElement.textContent || "" : "").replace(/\s+/g, " ").slice(0, 300);
+
+  const singleItem = {
+    fid,
+    tag: el.tagName.toLowerCase(),
+    type: (el.type || el.tagName).toLowerCase(),
+    placeholder: el.placeholder || "",
+    breadcrumb,
+    clues: clues.slice(0, 8),
+    parentContextText: parentText
+  };
+
+  const systemPrompt = `你是一个表单字段精确定位专家。请分析给定输入框在求职网申表单中对应的最准确简历字段槽位。
+参考槽位：${RESUME_SCHEMA_SLOTS}
+请严格输出格式：{"slot": "basic.email", "confidence": 0.99, "reason": "说明"}，不可带其它说明。`;
+
+  const userPrompt = `分析此输入控件：\n` + JSON.stringify(singleItem, null, 2);
+
+  console.log("[ResumeFiller Content] 正在向后台请求单点 AI 重诊...", singleItem);
+
+  try {
+    const resp = await new Promise((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          resolve({ success: false, error: "前后台通信超时 (28s)" });
+        }
+      }, 28000);
+
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({
+          action: "callLLM",
+          payload: {
+            prompt: userPrompt,
+            systemPrompt,
+            jsonMode: true,
+            meta: { action: "single_refine", element: singleItem, url: window.location.href }
+          }
+        }, (res) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve(res);
+          }
+        });
+      } else {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve({ success: false, error: "未连接到扩展后台 (chrome.runtime 不可用)" });
+        }
+      }
+    });
+
+    if (!resp) {
+      throw new Error("后台未返回响应");
+    }
+    if (!resp.success) {
+      throw new Error(resp.error || "大模型调用未成功");
+    }
+
+    let parsed = null;
+    try {
+      parsed = JSON.parse(resp.data);
+    } catch(e) {
+      const match = resp.data.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        throw new Error("模型未按 JSON 格式返回: " + resp.data.slice(0, 80));
+      }
+    }
+
+    if (parsed && parsed.slot) {
+      aiFieldMappingCache.set(fid, {
+        slot: parsed.slot,
+        confidence: parsed.confidence || 0.95,
+        reason: parsed.reason || "单点精修识别",
+        timestamp: Date.now()
+      });
+      return parsed.slot;
+    } else {
+      throw new Error("模型返回数据中未包含有效 slot 字段");
+    }
+  } catch(e) {
+    console.error("[ResumeFiller AI] 单点精修失败:", e);
+    throw e;
+  }
+}
+
+// 页面加载完成后默认不静默消耗 AI 分析，完全由用户在气泡上自主点击【🪄AI重诊】时按需调用
+// 如需整页分析，可在需要时由接口明确触发
+if (typeof window !== "undefined" && typeof document !== "undefined") {
+  // 保持按需调用机制
+}
+
 // 暴露接口给同在 content script 中的悬浮卡片模块调用
 window.ResumeFillerContent = {
   smartFillPage,
@@ -1637,6 +2015,10 @@ window.ResumeFillerContent = {
   parseChineseArea,
   autoSelectCascaderArea,
   autoCheckAgreements,
+  triggerAiPageFormAnalysis,
+  requestAiSingleFieldRefinement,
+  setAiFieldMapping: (fid, mapping) => aiFieldMappingCache.set(fid, mapping),
+  getAiFieldMapping: (fid) => aiFieldMappingCache.get(fid),
   getLastActiveElement: () => lastActiveElement,
   fillFocusedInput: (val) => {
     if (lastActiveElement && document.body.contains(lastActiveElement)) {
@@ -1713,10 +2095,146 @@ const FIELD_LABEL_MAP = {
   result: "项目成果"
 };
 
+// 根据槽位路径解析真实简历数据与候选推荐列表
+function resolveSlotValueAndMetadata(slot, resumeData, el) {
+  if (!slot || !resumeData) return null;
+  const parts = slot.split(".");
+  const clues = el ? getElementClues(el) : [];
+
+  if (parts[0] === "basic" && parts[1]) {
+    const subKey = parts[1];
+    const val = getBasicFieldDerivedValue(subKey, resumeData);
+    let suggestions = [];
+
+    if (subKey === "name") {
+      const split = splitChineseName(resumeData.basic.name || "");
+      if (split.lastName) suggestions.push({ label: `姓: ${split.lastName}`, value: split.lastName });
+      if (split.firstName) suggestions.push({ label: `名: ${split.firstName}`, value: split.firstName });
+    } else if (subKey.startsWith("emergency")) {
+      ["emergencyContact", "emergencyRelation", "emergencyPhone"].forEach(k => {
+        if (k !== subKey && resumeData.basic[k]) {
+          suggestions.push({ label: FIELD_LABEL_MAP[k] || k, value: resumeData.basic[k] });
+        }
+      });
+    }
+
+    return {
+      section: "basic",
+      subKey,
+      fieldKey: slot,
+      label: FIELD_LABEL_MAP[subKey] || subKey,
+      value: val || "",
+      clues,
+      suggestions,
+      isArea: ['nativePlace', 'nativeProvince', 'nativeCity', 'city', 'residence', 'residenceProvince', 'residenceCity'].includes(subKey)
+    };
+  }
+
+  if (parts[0] === "education" && parts.length >= 3) {
+    const idx = parseInt(parts[1], 10) || 0;
+    const subKey = parts[2];
+    const item = resumeData.education && resumeData.education[idx];
+    const val = item ? getEducationFieldValue(item, subKey) : "";
+    let suggestions = [];
+
+    if (["start", "startYear", "startMonth", "end", "endYear", "endMonth"].includes(subKey) && item) {
+      if (item.start) {
+        const [sy, sm] = item.start.split("-");
+        if (sy) suggestions.push({ label: `${sy}年`, value: sy });
+        if (sm) suggestions.push({ label: `${sm}月`, value: sm });
+      }
+      if (item.end) {
+        const [ey, em] = item.end.split("-");
+        if (ey) suggestions.push({ label: `${ey}年`, value: ey });
+        if (em) suggestions.push({ label: `${em}月`, value: em });
+      }
+    }
+
+    return {
+      section: "education",
+      subKey,
+      fieldKey: slot,
+      label: FIELD_LABEL_MAP[subKey] || subKey,
+      value: val || "",
+      clues,
+      suggestions
+    };
+  }
+
+  if (parts[0] === "internship" && parts.length >= 3) {
+    const idx = parseInt(parts[1], 10) || 0;
+    const subKey = parts[2];
+    const item = resumeData.internship && resumeData.internship[idx];
+    const val = item ? (item[subKey] || "") : "";
+    return {
+      section: "internship",
+      subKey,
+      fieldKey: slot,
+      label: FIELD_LABEL_MAP[subKey] || subKey,
+      value: val,
+      clues,
+      suggestions: []
+    };
+  }
+
+  if (parts[0] === "project" && parts.length >= 3) {
+    const idx = parseInt(parts[1], 10) || 0;
+    const subKey = parts[2];
+    const item = resumeData.project && resumeData.project[idx];
+    const val = item ? (item[subKey] || "") : "";
+    let suggestions = [];
+    if (item) {
+      ["desc", "duty", "result", "tech"].forEach(k => {
+        if (k !== subKey && item[k]) {
+          suggestions.push({ label: FIELD_LABEL_MAP[k] || k, value: item[k] });
+        }
+      });
+    }
+    return {
+      section: "project",
+      subKey,
+      fieldKey: slot,
+      label: FIELD_LABEL_MAP[subKey] || subKey,
+      value: val,
+      clues,
+      suggestions
+    };
+  }
+
+  if (slot === "skills" || slot === "languages") {
+    return {
+      section: "basic",
+      subKey: slot,
+      fieldKey: slot,
+      label: FIELD_LABEL_MAP[slot] || slot,
+      value: resumeData[slot] || "",
+      clues,
+      suggestions: []
+    };
+  }
+
+  return null;
+}
+
 // 精确单字段识别与匹配算法
 function detectFieldForElement(el, resumeData) {
   try {
     if (!el || !isEditableElement(el) || !resumeData) return null;
+
+    // ==================== 优先层：大模型拓扑映射缓存查询 ====================
+    const fid = getElementStableFingerprint(el);
+    const aiMapping = aiFieldMappingCache.get(fid);
+    if (aiMapping && aiMapping.slot && aiMapping.confidence >= 0.7) {
+      const slot = aiMapping.slot; // e.g. "basic.email", "education.0.school", "project.0.desc"
+      const resolved = resolveSlotValueAndMetadata(slot, resumeData, el);
+      if (resolved) {
+        resolved.isAiMatched = true;
+        resolved.confidence = aiMapping.confidence;
+        resolved.reason = aiMapping.reason;
+        return resolved;
+      }
+    }
+
     const clues = getElementClues(el);
     if (!clues || clues.length === 0) return null;
 

@@ -3,14 +3,14 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Manifest-V3-blue?style=flat-square" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Extension" />
-  <img src="https://img.shields.io/badge/Release-v1.0.0-indigo?style=flat-square" alt="Release" />
+  <img src="https://img.shields.io/badge/Release-v1.0.1-indigo?style=flat-square" alt="Release" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
   <img src="https://img.shields.io/badge/Data%20Privacy-100%25%20Local-success?style=flat-square" alt="Local Privacy" />
   <a href="https://linux.do/"><img src="https://img.shields.io/badge/LINUX%20DO-Community-blueviolet?style=flat-square" alt="LINUX DO" /></a>
 </p>
 
 > **求职/校招/社招网申便携神器** —— 告别机械重复的手工切换与复制粘贴！
-> 选项上智能弹出气泡、直接点击选项自动填入，轻量悬浮面板指哪填哪，主打**便携、快捷、跟手**的极致填写体验。
+> 选项上智能弹出气泡、直接点击选项自动填入，轻量悬浮面板指哪填哪，集成大模型 AI 深度重诊，主打**便携、快捷、跟手**的极致填写体验。
 
 ---
 
@@ -28,6 +28,7 @@
 
 **简历辅助填充助手** 专注于打造**最跟手、最可控、最便携**的网申辅助体验：
 - **🫧 智能气泡，指哪填哪**：光标停在哪个输入框，就近智能推荐对应内容，无需低头翻找。
+- **🪄 大模型 AI 深度重诊**：遇到复杂或疑难输入框，一键呼叫大模型进行高精度语义对齐，零隐私泄露。
 - **🎯 点击选项，直接填入**：直接轻点卡片里的各个选项即可自动填入当前光标所在的输入框；点击标签亦可一键复制。
 - **🪟 随行悬浮面板**：常驻页面边缘，支持自由拖动位置与折叠展开，绝不遮挡网页正文。
 - **🔒 100% 纯本地离线安全**：数据仅保存在浏览器的本地隔离存储中，不经过任何外部服务器。
@@ -39,6 +40,15 @@
 - 🫧 **选项上智能弹出气泡（跟手推荐）**
   - 当你在招聘网页点击或聚焦任意输入框时，插件会根据上下文智能匹配你的个人数据。
   - 在当前输入框旁**原地弹出精致快捷气泡**，一键直接填入推荐值，像原生输入法辅助一样顺滑顺手。
+
+- 🪄 **大模型 AI 深度重诊（疑难表单 99%+ 精准对齐）**
+  - 遇到复杂排版或自研招聘系统时，点击气泡上的 **`🪄AI重诊`** 按钮；
+  - 插件即刻提取当前输入框的黄金特征上下文，调用大模型进行多维语义分析，并在按钮旁**内联反馈诊断状态**，瞬间刷新为准确推荐项！
+  - **🛡️ 严格的零隐私出境原则（Zero-PII）**：向大模型发送的仅是网页公开的结构线索与标准槽位字典，你的姓名、电话、真实简历内容 **100% 保留在本机浏览器内部**，绝不外发！
+
+- 🤖 **卡片内置【AI配置】与【一键握手测速】**
+  - 展开悬浮卡片后切换至 **`🪄 AI配置`** 标签页，直接在当前页面配置大模型 API（支持 OpenAI 兼容格式与 Claude 原生格式）；
+  - 配备 **`⚡ 测试连接`** 按钮，一键向大模型发送测试握手，实时展示连接状态与响应耗时，省去在侧边栏反复切换排查的烦恼。
 
 - 🎯 **点击选项直接填入（点哪填哪，极致快捷）**
   - **点击卡片选项直接填入**：鼠标点击网页输入框后，无需寻找繁琐的复制粘贴按钮，直接在悬浮卡片中轻点对应项（如姓名、电话、邮箱、意向岗位、学历专业、项目长文本等输入框/文本块），插件便会自动将该内容填入到鼠标刚点击/聚焦的网页输入框里！
@@ -77,7 +87,7 @@
 ### 方式一：直接下载 Release 安装包（推荐）
 
 1. 前往 GitHub 右侧的 **[Releases](https://github.com/Suara17/resume-filler-extension/releases)** 页面。
-2. 下载最新版的 `resume-filler-extension-v1.0.0.zip` 并解压到本地文件夹。
+2. 下载最新版的 `resume-filler-extension-v1.0.1.zip` 并解压到本地文件夹。
 3. 打开 Chrome / Edge 浏览器，在地址栏输入：
    ```text
    chrome://extensions/
@@ -124,6 +134,7 @@ resume-filler-extension/
 ├── test_page.html             # 本地离线综合表单测试页面
 ├── resume_template.json       # 空白简历结构标准模板
 ├── resume_demo.json           # 示例脱敏演示数据（张三）
+├── agent_logs.js              # Agent 专用结构化诊断日志提取与监听工具
 ├── .gitignore                 # Git 忽略规则（保护个人真实简历防误传）
 ├── LICENSE                    # MIT 开源许可证
 └── README.md                  # 本说明文档

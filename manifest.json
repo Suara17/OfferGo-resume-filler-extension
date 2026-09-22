@@ -1,13 +1,16 @@
 {
   "manifest_version": 3,
   "name": "简历自动填充助手",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "求职/秋招必备效率工具，帮助你自动识别和填充简历信息，支持多段经历管理和一键整页智能填充。",
   "permissions": [
     "sidePanel",
     "storage",
     "activeTab",
     "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"

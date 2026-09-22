@@ -227,6 +227,14 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    @keyframes rfPillAiGlow {
+      0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7), 0 8px 24px rgba(15, 23, 42, 0.28); }
+      50% { box-shadow: 0 0 0 7px rgba(99, 102, 241, 0.15), 0 8px 24px rgba(15, 23, 42, 0.28); }
+      100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0), 0 8px 24px rgba(15, 23, 42, 0.28); }
+    }
+    .rf-pill-ai-glow {
+      animation: rfPillAiGlow 1.2s ease-out;
+    }
     .rf-pill-fill-btn {
       background: linear-gradient(135deg, #4f46e5, #6366f1);
       color: #ffffff;
@@ -262,6 +270,32 @@
     .rf-pill-copy-btn:hover {
       background: rgba(255, 255, 255, 0.25);
       color: #ffffff;
+    }
+    .rf-pill-ai-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .rf-pill-ai-status.loading {
+      color: #c7d2fe;
+      background: rgba(99, 102, 241, 0.25);
+      border: 1px solid rgba(199, 210, 254, 0.3);
+    }
+    .rf-pill-ai-status.success {
+      color: #86efac;
+      background: rgba(16, 185, 129, 0.25);
+      border: 1px solid rgba(134, 239, 172, 0.3);
+    }
+    .rf-pill-ai-status.error {
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid rgba(252, 165, 165, 0.3);
     }
     .rf-pill-suggestions {
       display: flex;
@@ -885,28 +919,38 @@
       font-weight: 600;
     }
 
-    /* Toast 提示 */
-    .rf-toast {
-      position: absolute;
-      top: 52px;
+    /* 全局 Toast 提示 (穿透所有层级，居中浮动) */
+    .rf-global-toast {
+      position: fixed;
+      top: 24px;
       left: 50%;
-      transform: translateX(-50%) translateY(-10px);
-      background: rgba(15, 23, 42, 0.9);
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       color: #ffffff;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 11.5px;
-      font-weight: 500;
+      padding: 9px 20px;
+      border-radius: 24px;
+      font-size: 12.5px;
+      font-weight: 600;
       pointer-events: none;
       z-index: 2147483647;
       opacity: 0;
-      transition: all 0.2s ease;
+      transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
       white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
     }
-    .rf-toast.rf-show {
+    .rf-global-toast.rf-show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+    }
+    .rf-global-toast.rf-toast-error {
+      background: rgba(220, 38, 38, 0.95) !important;
+      box-shadow: 0 10px 30px rgba(220, 38, 38, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    }
+    .rf-global-toast.rf-toast-success {
+      background: rgba(16, 185, 129, 0.95) !important;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
     }
   `;
   shadow.appendChild(styleEl);
@@ -914,16 +958,21 @@
   // 容器构建
   const container = document.createElement("div");
   container.innerHTML = `
+    <!-- 全局独立 Toast 提示 (无论卡片是否折叠，屏幕居中浮动) -->
+    <div class="rf-global-toast" id="rf-toast">提示信息</div>
+
     <!-- 1. 输入框焦点跟随智能气泡 -->
     <div class="rf-inline-pill rf-pill-hidden" id="rf-inline-pill">
       <div class="rf-pill-body">
-        <span>🪄</span>
+        <span id="rf-pill-ai-icon" title="大模型高精度对齐" style="cursor: pointer;">🪄</span>
         <span class="rf-pill-tag" id="rf-pill-tag">姓名</span>
         <span style="opacity: 0.5;">:</span>
         <span class="rf-pill-val" id="rf-pill-val">李某某</span>
       </div>
       <button class="rf-pill-fill-btn" id="rf-pill-fill-btn" title="单击或按快捷键自动填入">↵ 填入</button>
       <button class="rf-pill-copy-btn" id="rf-pill-copy-btn" title="复制内容">📋</button>
+      <button class="rf-pill-copy-btn" id="rf-pill-refine-btn" title="不准确？点击呼唤 AI 重新精确定位此框" style="background: rgba(99, 102, 241, 0.3); border: 1px solid rgba(199, 210, 254, 0.4);">🪄AI重诊</button>
+      <span id="rf-pill-ai-status" class="rf-pill-ai-status" style="display: none;"></span>
       <div class="rf-pill-suggestions" id="rf-pill-suggestions"></div>
       <button class="rf-pill-close-btn" id="rf-pill-close-btn" title="关闭气泡">×</button>
     </div>
@@ -943,7 +992,6 @@
 
     <!-- 3. 悬浮卡片 -->
     <div class="rf-card-modal ${isCardCollapsed ? 'rf-hidden' : ''}" id="rf-card-modal">
-      <div class="rf-toast" id="rf-toast">提示信息</div>
 
       <!-- 头部 -->
       <div class="rf-header" id="rf-header">
@@ -1011,6 +1059,7 @@
         <div class="rf-tab-item" data-tab="project">项目经历</div>
         <div class="rf-tab-item" data-tab="skills">技能荣誉</div>
         <div class="rf-tab-item" data-tab="paper-comp">赛事论文</div>
+        <div class="rf-tab-item" data-tab="ai-config" style="color: #4f46e5; font-weight: 600;">🪄 AI配置</div>
       </div>
 
       <!-- 交互提示条与模式切换胶囊 -->
@@ -1272,6 +1321,58 @@
           <div id="rf-paper-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
           <button class="rf-btn-add" id="rf-btn-add-paper">+ 新增论文/期刊/专利</button>
         </div>
+
+        <!-- 7. 大模型 AI 配置面板 -->
+        <div class="rf-tab-panel" id="panel-ai-config">
+          <div style="font-size: 12px; font-weight: 700; color: #4f46e5; display: flex; align-items: center; justify-content: space-between;">
+            <span>🤖 大模型接口配置 (AI 智能对齐)</span>
+            <span style="font-size: 10px; font-weight: normal; color: var(--text-muted);">全局共享</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.4; background: #eef2ff; padding: 7px 10px; border-radius: 6px; border: 1px solid #c7d2fe; margin-top: 4px;">
+            💡 用于网申输入框的 99%+ 高精度对齐。支持任何兼容 OpenAI 或 Claude 格式的接口（如 DeepSeek、OpenAI、通义千问等）。
+          </div>
+
+          <div class="rf-form-group" style="margin-top: 8px;">
+            <label class="rf-form-label">接口协议 (Protocol)</label>
+            <div class="rf-input-wrapper">
+              <select class="rf-form-control" id="rf-ai-protocol" style="height: 32px; background: #fff; cursor: pointer;">
+                <option value="openai">OpenAI 兼容协议 (支持大多数中转/国产大模型)</option>
+                <option value="claude">Claude 原生协议 (Anthropic Messages API)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label">API 服务地址 (Base URL)</label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" id="rf-ai-base-url" placeholder="如：https://api.openai.com/v1 或 https://api.deepseek.com/v1">
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label">API 密钥 (API Key) *</label>
+            <div class="rf-input-wrapper">
+              <input type="password" class="rf-form-control" id="rf-ai-api-key" placeholder="填入你的 sk-xxxxxxxx 密钥">
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label">模型名称 (Model Name)</label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" id="rf-ai-model" placeholder="如：gpt-4o-mini / deepseek-chat / gpt-4o">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button class="rf-btn-smart-fill" id="rf-btn-test-ai" style="flex: 1; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); box-shadow: none; justify-content: center;">
+              ⚡ 测试连接
+            </button>
+            <button class="rf-btn-smart-fill" id="rf-btn-save-ai" style="flex: 1.2; justify-content: center;">
+              💾 保存配置
+            </button>
+          </div>
+          <div id="rf-ai-test-result" style="font-size: 11px; padding: 6px 8px; border-radius: 4px; display: none; line-height: 1.4; margin-top: 8px;"></div>
+        </div>
       </div>
 
       <!-- 底部操作区 -->
@@ -1325,6 +1426,9 @@
   const pillVal = shadow.getElementById("rf-pill-val");
   const pillFillBtn = shadow.getElementById("rf-pill-fill-btn");
   const pillCopyBtn = shadow.getElementById("rf-pill-copy-btn");
+  const pillRefineBtn = shadow.getElementById("rf-pill-refine-btn");
+  const pillAiStatus = shadow.getElementById("rf-pill-ai-status");
+  const pillAiIcon = shadow.getElementById("rf-pill-ai-icon");
   const pillSuggestions = shadow.getElementById("rf-pill-suggestions");
   const pillCloseBtn = shadow.getElementById("rf-pill-close-btn");
 
@@ -1334,14 +1438,18 @@
   // ==================== 工具函数 ====================
 
   let toastTimer = null;
-  function showToast(msg) {
+  function showToast(msg, type = "info") {
     if (!toastEl) return;
     toastEl.textContent = msg;
+    toastEl.classList.remove("rf-toast-error", "rf-toast-success");
+    if (type === "error") toastEl.classList.add("rf-toast-error");
+    if (type === "success") toastEl.classList.add("rf-toast-success");
     toastEl.classList.add("rf-show");
     clearTimeout(toastTimer);
+    const duration = type === "error" ? 4500 : (type === "success" ? 2500 : 2000);
     toastTimer = setTimeout(() => {
       toastEl.classList.remove("rf-show");
-    }, 2000);
+    }, duration);
   }
 
   // 递归合并默认结构
@@ -1965,11 +2073,31 @@
     currentTargetInput = target;
     currentDetectedField = match;
 
+    // 重置重诊按钮状态与内联提示
+    if (pillRefineBtn) {
+      pillRefineBtn.textContent = "🪄AI重诊";
+      pillRefineBtn.disabled = false;
+      pillRefineBtn.style.opacity = "1";
+    }
+    if (pillAiStatus) {
+      pillAiStatus.style.display = "none";
+    }
+
     if (match) {
       pillTag.textContent = match.label;
       const previewVal = match.value || "[空]";
       pillVal.textContent = previewVal.length > 18 ? previewVal.slice(0, 16) + "..." : previewVal;
       pillFillBtn.style.display = "inline-flex";
+
+      if (pillAiIcon) {
+        pillAiIcon.textContent = match.isAiMatched ? "🤖" : "🪄";
+        pillAiIcon.title = match.isAiMatched
+          ? `大模型语义对齐 (置信度: ${Math.round((match.confidence || 0.95) * 100)}%)\n${match.reason || ''}`
+          : "本地规则推断，点击让 AI 重新深度分析此框";
+      }
+      if (pillRefineBtn) {
+        pillRefineBtn.style.display = match.isAiMatched ? "none" : "inline-flex";
+      }
 
       // 地区级联一键选择支持
       pillSuggestions.innerHTML = "";
@@ -2221,6 +2349,158 @@
       const targetPanel = shadow.getElementById(`panel-${tabId}`);
       if (targetPanel) targetPanel.classList.add("active");
     });
+
+    // ==================== 悬浮卡片内的 AI 配置与连通性测试 ====================
+    const aiProtocolEl = shadow.getElementById("rf-ai-protocol");
+    const aiBaseUrlEl = shadow.getElementById("rf-ai-base-url");
+    const aiApiKeyEl = shadow.getElementById("rf-ai-api-key");
+    const aiModelEl = shadow.getElementById("rf-ai-model");
+    const aiSaveBtn = shadow.getElementById("rf-btn-save-ai");
+    const aiTestBtn = shadow.getElementById("rf-btn-test-ai");
+    const aiTestResult = shadow.getElementById("rf-ai-test-result");
+
+    async function loadFloatingAiConfig() {
+      try {
+        const storage = await new Promise(r => {
+          if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.get("apiConfig", r);
+          } else {
+            r({ apiConfig: JSON.parse(localStorage.getItem("apiConfig") || "{}") });
+          }
+        });
+        const cfg = storage.apiConfig || {};
+        if (aiProtocolEl) aiProtocolEl.value = cfg.protocol || "openai";
+        if (aiBaseUrlEl) aiBaseUrlEl.value = cfg.baseUrl || "https://api.openai.com/v1";
+        if (aiApiKeyEl) aiApiKeyEl.value = cfg.apiKey || "";
+        if (aiModelEl) aiModelEl.value = cfg.model || "gpt-4o-mini";
+      } catch (e) {}
+    }
+
+    loadFloatingAiConfig();
+
+    if (aiSaveBtn) {
+      aiSaveBtn.addEventListener("click", async () => {
+        const newCfg = {
+          protocol: aiProtocolEl ? aiProtocolEl.value : "openai",
+          baseUrl: aiBaseUrlEl ? aiBaseUrlEl.value.trim() : "https://api.openai.com/v1",
+          apiKey: aiApiKeyEl ? aiApiKeyEl.value.trim() : "",
+          model: aiModelEl ? aiModelEl.value.trim() : "gpt-4o-mini"
+        };
+        try {
+          if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+            await chrome.storage.local.set({ apiConfig: newCfg });
+          }
+          localStorage.setItem("apiConfig", JSON.stringify(newCfg));
+          showToast("✅ AI 接口配置已保存！", "success");
+        } catch(err) {
+          showToast("保存失败: " + err.message, "error");
+        }
+      });
+    }
+
+    if (aiTestBtn) {
+      aiTestBtn.addEventListener("click", async () => {
+        const protocol = aiProtocolEl ? aiProtocolEl.value : "openai";
+        const baseUrl = aiBaseUrlEl ? aiBaseUrlEl.value.trim() : "https://api.openai.com/v1";
+        const apiKey = aiApiKeyEl ? aiApiKeyEl.value.trim() : "";
+        const model = aiModelEl ? aiModelEl.value.trim() : "gpt-4o-mini";
+
+        if (!apiKey) {
+          showToast("请先输入 API Key 再进行测试！", "error");
+          if (aiTestResult) {
+            aiTestResult.style.display = "block";
+            aiTestResult.style.background = "#fee2e2";
+            aiTestResult.style.color = "#991b1b";
+            aiTestResult.textContent = "❌ 请先填写 API Key！";
+          }
+          return;
+        }
+
+        // 先自动保存当前输入的配置
+        const testCfg = { protocol, baseUrl, apiKey, model };
+        if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+          await chrome.storage.local.set({ apiConfig: testCfg });
+        }
+        localStorage.setItem("apiConfig", JSON.stringify(testCfg));
+
+        aiTestBtn.textContent = "正在测试...";
+        aiTestBtn.disabled = true;
+        aiTestBtn.style.opacity = "0.6";
+        showToast("⚡ 正在向大模型发送握手测试请求...", "info");
+
+        if (aiTestResult) {
+          aiTestResult.style.display = "block";
+          aiTestResult.style.background = "#f1f5f9";
+          aiTestResult.style.color = "var(--text-secondary)";
+          aiTestResult.textContent = "⏳ 正在连接大模型并验证回复...";
+        }
+
+        const t0 = Date.now();
+        try {
+          const resp = await new Promise((resolve) => {
+            let settled = false;
+            const timer = setTimeout(() => {
+              if (!settled) {
+                settled = true;
+                resolve({ success: false, error: "连接测试超时 (15s)" });
+              }
+            }, 15000);
+
+            if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+              chrome.runtime.sendMessage({
+                action: "callLLM",
+                payload: {
+                  prompt: "Hello, this is a connectivity test. Reply with 'pong' directly.",
+                  systemPrompt: "You are a test ping bot.",
+                  jsonMode: false,
+                  meta: { action: "test_ping", url: window.location.href }
+                }
+              }, (res) => {
+                if (!settled) {
+                  settled = true;
+                  clearTimeout(timer);
+                  resolve(res);
+                }
+              });
+            } else {
+              resolve({ success: false, error: "chrome.runtime 不可用" });
+            }
+          });
+
+          const duration = Date.now() - t0;
+          if (resp && resp.success) {
+            showToast(`✅ 连接成功！模型响应耗时: ${duration}ms`, "success");
+            if (aiTestResult) {
+              aiTestResult.style.display = "block";
+              aiTestResult.style.background = "#dcfce7";
+              aiTestResult.style.color = "#166534";
+              aiTestResult.innerHTML = `✅ <b>连接成功！</b> 耗时: <b>${duration}ms</b><br>模型回复: "${(resp.data || '').slice(0, 50)}"`;
+            }
+          } else {
+            const err = resp ? resp.error : "未知错误";
+            showToast(`❌ 连接测试失败: ${err}`, "error");
+            if (aiTestResult) {
+              aiTestResult.style.display = "block";
+              aiTestResult.style.background = "#fee2e2";
+              aiTestResult.style.color = "#991b1b";
+              aiTestResult.innerHTML = `❌ <b>连接失败:</b> ${err}`;
+            }
+          }
+        } catch(err) {
+          showToast(`❌ 测试发生异常: ${err.message}`, "error");
+          if (aiTestResult) {
+            aiTestResult.style.display = "block";
+            aiTestResult.style.background = "#fee2e2";
+            aiTestResult.style.color = "#991b1b";
+            aiTestResult.textContent = "❌ 发生异常: " + err.message;
+          }
+        } finally {
+          aiTestBtn.textContent = "⚡ 测试连接";
+          aiTestBtn.disabled = false;
+          aiTestBtn.style.opacity = "1";
+        }
+      });
+    }
 
     // 3. 智能填充整页
     smartFillBtn.addEventListener("click", () => {
@@ -2745,6 +3025,80 @@
         navigator.clipboard.writeText(currentDetectedField.value).then(() => {
           showToast("已成功复制到剪贴板！");
         });
+      }
+    });
+
+    // 🪄 AI 重诊：当本地推断不准时，单点呼叫大模型重新诊断此输入框 (所有提示直接呈现在按钮旁，不弹外部Toast)
+    if (pillRefineBtn) {
+      pillRefineBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!currentTargetInput) return;
+
+        // 按钮及旁边状态更新
+        pillRefineBtn.textContent = "分析中...";
+        pillRefineBtn.disabled = true;
+        pillRefineBtn.style.opacity = "0.6";
+
+        if (pillAiStatus) {
+          pillAiStatus.className = "rf-pill-ai-status loading";
+          pillAiStatus.style.display = "inline-flex";
+          pillAiStatus.textContent = "⏳ 思考中...";
+        }
+
+        try {
+          if (window.ResumeFillerContent && window.ResumeFillerContent.requestAiSingleFieldRefinement) {
+            const slot = await window.ResumeFillerContent.requestAiSingleFieldRefinement(currentTargetInput);
+            if (slot) {
+              if (pillAiStatus) {
+                pillAiStatus.className = "rf-pill-ai-status success";
+                pillAiStatus.style.display = "inline-flex";
+                pillAiStatus.textContent = `✓ 已对齐: ${slot}`;
+                setTimeout(() => {
+                  if (pillAiStatus) pillAiStatus.style.display = "none";
+                }, 2200);
+              }
+              showPillForInput(currentTargetInput); // 重新渲染气泡为精准项
+            } else {
+              if (pillAiStatus) {
+                pillAiStatus.className = "rf-pill-ai-status error";
+                pillAiStatus.style.display = "inline-flex";
+                pillAiStatus.textContent = "未匹配到合适槽位";
+                setTimeout(() => {
+                  if (pillAiStatus) pillAiStatus.style.display = "none";
+                }, 2500);
+              }
+            }
+          } else {
+            if (pillAiStatus) {
+              pillAiStatus.className = "rf-pill-ai-status error";
+              pillAiStatus.style.display = "inline-flex";
+              pillAiStatus.textContent = "未找到 AI 诊断引擎";
+            }
+          }
+        } catch(err) {
+          console.error("AI 重诊异常:", err);
+          const errMsg = err.message || String(err);
+          if (pillAiStatus) {
+            pillAiStatus.className = "rf-pill-ai-status error";
+            pillAiStatus.style.display = "inline-flex";
+            pillAiStatus.textContent = "❌ " + (errMsg.length > 22 ? errMsg.slice(0, 20) + "..." : errMsg);
+            setTimeout(() => {
+              if (pillAiStatus) pillAiStatus.style.display = "none";
+            }, 3500);
+          }
+        } finally {
+          pillRefineBtn.textContent = "🪄AI重诊";
+          pillRefineBtn.disabled = false;
+          pillRefineBtn.style.opacity = "1";
+        }
+      });
+    }
+
+    // 监听整页 AI 拓扑分析完成事件，即时更新气泡
+    window.addEventListener("rf-ai-mapping-updated", (e) => {
+      if (currentTargetInput && document.body.contains(currentTargetInput)) {
+        showPillForInput(currentTargetInput);
       }
     });
 

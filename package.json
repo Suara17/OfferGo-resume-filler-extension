@@ -1,6 +1,6 @@
 {
   "name": "resume-filler-extension",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "求职/校招/社招必备效率神器：Chrome 扩展程序，智能识别招聘系统网页表单并一键自动填入个人简历信息，支持多段经历管理、悬浮卡片、字段精准匹配与本地安全存储。",
   "main": "background.js",
   "scripts": {
