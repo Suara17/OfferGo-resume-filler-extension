@@ -3145,6 +3145,26 @@
     window.addEventListener("scroll", updatePillPosition, { passive: true });
     window.addEventListener("resize", updatePillPosition, { passive: true });
 
+    // 网页空白处双击监听：在网申/填报页面任意空白背景处双击，快速切换悬浮按钮与悬浮卡片
+    document.addEventListener("dblclick", (e) => {
+      const el = e.target;
+      if (!el) return;
+      // 排除插件自身 DOM
+      if (el.closest && el.closest("#resume-filler-extension-host")) return;
+      if (el.getRootNode && el.getRootNode() instanceof ShadowRoot) return;
+
+      // 排除用户正在操作的控件（输入框、选择框、按钮、链接等）
+      const isControl = el.closest("input, textarea, select, button, a, [contenteditable='true'], .rf-form-control");
+      if (isControl) return;
+
+      // 排除用户正在划选文字的行为
+      const selection = window.getSelection ? window.getSelection().toString().trim() : "";
+      if (selection.length > 0) return;
+
+      // 触发切换（支持就地在鼠标位置折叠/展开）
+      toggleCard(undefined, { x: e.clientX, y: e.clientY });
+    }, true);
+
     // 键盘快捷键监听:
     // Alt + Enter: 直接将气泡内容填入当前聚焦的输入框
     // Alt + F: 一键智能填充整页
