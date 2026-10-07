@@ -112,12 +112,8 @@ async function appendAgentLog(entry) {
   // 1. 在控制台单行输出紧凑 JSON，方便 AI Agent / 自动化脚本捕获
   console.log("[AGENT_DIAGNOSTIC_JSON]: " + JSON.stringify(logItem));
 
-  // 2. 尝试将日志推送到本地 CLI 接收器 (http://127.0.0.1:28888/log)，若未开启则静默忽略
-  fetch("http://127.0.0.1:28888/log", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(logItem)
-  }).catch(() => {});
+  // 2. 本地 CLI 日志推送已移除：该接口未经身份验证，且会将简历 PII 以明文发送到
+  //    本机任意进程可监听的端口 (127.0.0.1:28888)，存在信息泄露风险 (CWE-319)。
 
   // 3. 在 chrome.storage.local 中持久化保留最近 100 条
   try {
