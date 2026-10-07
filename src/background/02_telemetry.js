@@ -76,13 +76,18 @@ async function appendAgentLog(entry) {
   // 1. 在控制台单行输出紧凑 JSON，方便 AI Agent / 自动化脚本捕获
   console.log("[AGENT_DIAGNOSTIC_JSON]: " + JSON.stringify(logItem));
 
-  // 2. 尝试将日志推送到本地 CLI 接收器 (http://127.0.0.1:28888/log)，若未开启则静默忽略
-  fetch("http://127.0.0.1:28888/log", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(logItem)
-  }).catch(() => {});
-
+  // 2. 本地 CLI 日志推送设为显式配置项：默认不向 127.0.0.1:28888 发送未认证明文请求 (CWE-319 防御)
+  //    仅当在开发环境中显式开启 rf_enable_local_cli_debug 时，才按需推送到本地调试接收器
+  try {
+    const debugCfg = await chrome.storage.local.get("rf_enable_local_cli_debug");
+    if (debugCfg && debugCfg.rf_enable_local_cli_debug) {
+      fetch("http://127.0.0.1:28888/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(logItem)
+      }).catch(() => {});
+    }
+  } catch (_) {}
   // 3. 在 chrome.storage.local 中持久化保留最近 100 条
   try {
     const storage = await chrome.storage.local.get(AGENT_LOG_STORAGE_KEY);
