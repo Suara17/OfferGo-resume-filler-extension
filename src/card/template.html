@@ -1,0 +1,581 @@
+<!-- 全局独立 Toast 提示 (无论卡片是否折叠，屏幕居中浮动) -->
+    <div class="rf-global-toast" id="rf-toast">提示信息</div>
+
+    <!-- 1. 输入框焦点跟随智能气泡 -->
+    <div class="rf-inline-pill rf-pill-hidden" id="rf-inline-pill">
+      <div class="rf-pill-body">
+        <span id="rf-pill-ai-icon" title="智能槽位匹配" style="cursor: pointer; opacity: 0.85;">✦</span>
+        <span class="rf-pill-tag" id="rf-pill-tag">姓名</span>
+        <span style="opacity: 0.4;">:</span>
+        <span class="rf-pill-val" id="rf-pill-val">李某某</span>
+      </div>
+      <button class="rf-pill-fill-btn" id="rf-pill-fill-btn" title="单击或按快捷键自动填入">↵ 填入</button>
+      <button class="rf-pill-copy-btn" id="rf-pill-copy-btn" title="复制内容">复制</button>
+      <button class="rf-pill-copy-btn" id="rf-pill-refine-btn" title="不准确？点击呼唤大模型深度诊断此框" style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); color: #cbd5e1;">重诊</button>
+      <span id="rf-pill-ai-status" class="rf-pill-ai-status" style="display: none;"></span>
+      <div class="rf-pill-suggestions" id="rf-pill-suggestions"></div>
+      <button class="rf-pill-expand-card-btn" id="rf-pill-expand-card-btn" title="就地展开完整简历面板">展开面板 ↗</button>
+      <button class="rf-pill-close-btn" id="rf-pill-close-btn" title="关闭气泡">×</button>
+    </div>
+
+    <!-- 退出鼠标穿透胶囊 (穿透模式下常驻) -->
+    <div class="rf-ghost-badge rf-hidden" id="rf-ghost-badge" title="点击退出鼠标穿透模式 (快捷键 Alt+T)">
+      <span>👻</span>
+      <span>穿透模式 (点击退出 / Alt+T)</span>
+    </div>
+
+    <!-- 2. 悬浮折叠球 (极简现代矢量图标，克制高级) -->
+    <div class="rf-floating-btn" id="rf-trigger-btn" title="OfferGo-网申简历快速填写助手 (单击展开，可任意拖拽放置)">
+      <svg class="rf-floating-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3.5" y="2.5" width="13" height="17" rx="2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="6.5" y1="6.5" x2="11" y2="6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <line x1="6.5" y1="10" x2="13.5" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.85"/>
+        <line x1="6.5" y1="13.5" x2="10.5" y2="13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.75"/>
+        <circle cx="16.5" cy="16.5" r="5" fill="#0ea5e9" stroke="#0f172a" stroke-width="1.5"/>
+        <path d="M17 13.8L14.9 16.6H16.9L16.1 19.2L18.8 16.3H16.9L17 13.8Z" fill="#ffffff"/>
+      </svg>
+    </div>
+
+    <!-- 3. 悬浮卡片 -->
+    <div class="rf-card-modal ${isCardCollapsed ? 'rf-hidden' : ''}" id="rf-card-modal">
+
+      <!-- 头部 -->
+      <div class="rf-header" id="rf-header">
+        <div class="rf-header-top">
+          <div class="rf-logo-title" id="rf-logo-title" title="单击卡片任意空白区域立即折叠 (单击小球就地展开)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+              <rect x="3.5" y="2.5" width="13" height="17" rx="2.6" stroke="#4338ca" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="6.5" y1="6.5" x2="11" y2="6.5" stroke="#4338ca" stroke-width="1.6" stroke-linecap="round"/>
+              <line x1="6.5" y1="10" x2="13.5" y2="10" stroke="#4338ca" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.85"/>
+              <line x1="6.5" y1="13.5" x2="10.5" y2="13.5" stroke="#4338ca" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.75"/>
+              <circle cx="16.5" cy="16.5" r="5" fill="#0ea5e9" stroke="#ffffff" stroke-width="1.5"/>
+              <path d="M17 13.8L14.9 16.6H16.9L16.1 19.2L18.8 16.3H16.9L17 13.8Z" fill="#ffffff"/>
+            </svg>
+          </div>
+          <div class="rf-header-controls">
+            <button class="rf-icon-btn" id="rf-btn-password-gen" title="智能密码生成器：按格式要求生成随机合规密码并填入">🔑</button>
+            <button class="rf-icon-btn" id="rf-btn-site-setting" title="当前网站自动弹出设置 (智能/始终/禁止)">🌐</button>
+            <button class="rf-icon-btn" id="rf-btn-mode-toggle" title="切换模式 (Alt+E)：当前为【填报模式】，点击进入【修改模式】">✏️</button>
+            <button class="rf-icon-btn" id="rf-btn-opacity" title="调节透明度: 100% / 75% / 45%">💧</button>
+            <button class="rf-icon-btn" id="rf-btn-ghost" title="开启鼠标穿透 (Alt+T)：卡片变半透明且可直接点击穿透底下的网页">👻</button>
+            <button class="rf-icon-btn" id="rf-btn-reset-pos" title="重置卡片位置到右下角">📍</button>
+            <button class="rf-icon-btn" id="rf-btn-version-rename" title="重命名当前版本">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="rf-icon-btn" id="rf-btn-version-add" title="另存为新版本">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button class="rf-icon-btn rf-btn-close" id="rf-btn-minimize" title="折叠卡片">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 网站弹出控制下拉浮层 (默认绝对隐藏) -->
+        <div class="rf-site-menu rf-hidden" id="rf-site-menu" style="display: none;">
+          <div class="rf-site-menu-title">
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">域名: <b id="rf-site-domain-text">current</b></span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span id="rf-site-status-badge" style="font-size: 10px; color: var(--primary); font-weight: bold;">⚡智能</span>
+              <button id="rf-btn-close-site-menu" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: bold; width: 22px; height: 22px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; padding: 0;" title="关闭菜单">✕</button>
+            </div>
+          </div>
+          <div class="rf-site-menu-item active" id="rf-opt-site-auto" title="仅在招聘与网申表单页面自动显示">
+            <span>⚡</span>
+            <span>智能检测 (仅网申页自动弹出)</span>
+          </div>
+          <div class="rf-site-menu-item" id="rf-opt-site-always" title="无论什么页面均自动弹出">
+            <span>✅</span>
+            <span>在此网站始终弹出 (加入白名单)</span>
+          </div>
+          <div class="rf-site-menu-item" id="rf-opt-site-never" title="绝不自动弹出，仅在点击图标时唤起">
+            <span>🚫</span>
+            <span>在此网站禁止弹出 (加入黑名单)</span>
+          </div>
+        </div>
+
+        <!-- 智能密码生成器浮层 (自然语言规则解析/AI生成/一键填入主密码与确认密码) -->
+        <!-- 智能密码生成器浮层 (自然语言规则解析/AI生成/一键填入主密码与确认密码/站点密码保存) -->
+        <div class="rf-pwd-menu rf-hidden" id="rf-pwd-menu" style="display: none;">
+          <div class="rf-site-menu-title">
+            <span>🔑 智能密码生成器</span>
+            <button id="rf-btn-close-pwd-menu" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: bold; width: 22px; height: 22px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; padding: 0;" title="关闭">✕</button>
+          </div>
+
+          <!-- 当前站点提示与账号关联行 -->
+          <div class="rf-pwd-site-banner">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              🌐 站点: <b class="rf-pwd-site-name" id="rf-pwd-site-name">检测中…</b>
+            </span>
+            <span id="rf-pwd-site-badge" style="font-size:10px; color:#4338ca; background:#eef2ff; padding:1px 5px; border-radius:4px; white-space:nowrap;">求职站点</span>
+          </div>
+
+          <!-- 账号关联与保存按钮行 -->
+          <div class="rf-pwd-account-row">
+            <input type="text" class="rf-pwd-account-input" id="rf-pwd-account-input" placeholder="关联账号(手机号/邮箱/用户名)">
+            <button type="button" class="rf-sms-btn" id="rf-pwd-btn-save-site" style="height:28px; padding:0 8px; font-size:11px; background:#ecfdf5; color:#047857; border-color:#a7f3d0; font-weight:700; white-space:nowrap;" title="保存生成的密码到当前站点备忘录">💾 保存此站</button>
+          </div>
+
+          <!-- 本站已存密码快捷卡片 (有保存时动态呈现) -->
+          <div class="rf-pwd-saved-card" id="rf-pwd-current-site-card" style="display: none;">
+            <div class="rf-pwd-saved-header">
+              <span>📌 本站已保存密码</span>
+              <span id="rf-pwd-saved-time" style="font-size:10px; font-weight:normal; opacity:0.8;"></span>
+            </div>
+            <div class="rf-pwd-saved-info">
+              <span id="rf-pwd-saved-acc" style="font-weight:600;">——</span>
+              <span id="rf-pwd-saved-val" style="letter-spacing:1px;">••••••••</span>
+              <button type="button" id="rf-pwd-saved-toggle-eye" style="background:none; border:none; cursor:pointer; font-size:11px; color:#15803d; padding:0 2px;">👁️</button>
+            </div>
+            <div class="rf-pwd-saved-actions">
+              <button type="button" class="rf-pwd-saved-btn" id="rf-pwd-saved-btn-fill">⚡ 填入此密码</button>
+              <button type="button" class="rf-pwd-saved-btn" id="rf-pwd-saved-btn-copy">📋 复制</button>
+              <button type="button" class="rf-pwd-saved-btn danger" id="rf-pwd-saved-btn-del" title="删除本站已保存密码">🗑️</button>
+            </div>
+          </div>
+
+          <!-- 密码展示卡片 -->
+          <div class="rf-pwd-box">
+            <div class="rf-pwd-val-row">
+              <span class="rf-pwd-val" id="rf-pwd-val">P@ssw0rd2026!</span>
+              <button type="button" id="rf-pwd-toggle-eye" title="切换显示/隐藏" style="background:none; border:none; cursor:pointer; font-size:13px; color:var(--text-muted); padding:2px;">👁️</button>
+            </div>
+            <div class="rf-pwd-meta">
+              <span id="rf-pwd-desc">13位 · 大小写+数字+特殊字符</span>
+              <span class="rf-pwd-strength" id="rf-pwd-strength">🟢 强密码</span>
+            </div>
+          </div>
+
+          <!-- 当前页面密码框探测状态 -->
+          <div class="rf-pwd-status" id="rf-pwd-status">正在检测页面密码输入框…</div>
+
+          <!-- 操作按钮行 -->
+          <div class="rf-sms-row">
+            <button class="rf-sms-btn primary" id="rf-pwd-btn-fill" title="自动填入主密码框与确认密码框">⚡ 填入密码框</button>
+            <button class="rf-sms-btn" id="rf-pwd-btn-pick" title="鼠标点击页面任意输入框直接填入">👉 点选填入</button>
+          </div>
+
+          <div class="rf-sms-row">
+            <button class="rf-sms-btn" id="rf-pwd-btn-regen" title="换一个符合要求的随机密码">🎲 换一个</button>
+            <button class="rf-sms-btn" id="rf-pwd-btn-copy" title="复制当前密码到剪贴板">📋 复制密码</button>
+          </div>
+
+          <!-- 规则输入区 -->
+          <div class="rf-pwd-input-area">
+            <div class="rf-pwd-input-label">
+              <span>密码格式要求 (AI智能解析)：</span>
+              <button type="button" class="rf-sms-link-btn" id="rf-pwd-btn-extract" title="从页面密码框及其附近的说明文字自动提取格式要求">🔍 提取网页提示</button>
+            </div>
+            <textarea class="rf-pwd-rule-input" id="rf-pwd-rule-input" placeholder="例如：8-16位，必须包含大写字母、小写字母、数字和特殊字符"></textarea>
+            
+            <div class="rf-pwd-preset-tags">
+              <span class="rf-pwd-tag" data-rule="8-16位，包含大写字母、小写字母、数字和特殊符号">8-16位 全字符</span>
+              <span class="rf-pwd-tag" data-rule="8-20位，必须包含大小写字母和数字">8-20位 字母+数字</span>
+              <span class="rf-pwd-tag" data-rule="12位高强度随机密码，包含大小写、数字及符号">12位 强随机</span>
+              <span class="rf-pwd-tag" data-rule="6位纯数字密码">6位 纯数字</span>
+            </div>
+          </div>
+
+          <button class="rf-sms-btn" id="rf-pwd-btn-ai-generate" style="background:#eef2ff; color:#4338ca; border-color:#c7d2fe; font-weight:700;" title="调用大模型理解要求并生成合规随机密码">🪄 AI 按要求生成新密码</button>
+
+          <!-- 全站点已保存密码备忘折叠抽屉 -->
+          <div class="rf-pwd-vault-header" id="rf-pwd-vault-toggle">
+            <span class="rf-pwd-vault-title">
+              <span>🗂️ 已保存密码备忘</span>
+              <span id="rf-pwd-vault-count" style="font-size:10px; background:#e2e8f0; color:#475569; padding:0 5px; border-radius:10px; font-weight:bold;">0</span>
+            </span>
+            <span id="rf-pwd-vault-arrow" style="font-size:10px; color:var(--text-muted);">▾</span>
+          </div>
+          <div id="rf-pwd-vault-drawer" style="display: none;">
+            <div style="display:flex; gap:4px; margin-bottom:4px;">
+              <input type="text" class="rf-pwd-account-input" id="rf-pwd-vault-search" placeholder="🔍 搜索站点/账号..." style="height:24px; font-size:10.5px;">
+              <button type="button" id="rf-pwd-vault-export" class="rf-sms-link-btn" title="导出所有站点密码为 JSON">📥导出</button>
+            </div>
+            <div class="rf-pwd-vault-container" id="rf-pwd-vault-list"></div>
+          </div>
+
+          <div class="rf-sms-tip">
+            💡 支持任意自然语言规则，AI 自动理解并生成。<br>
+            若页面包含“密码”与“确认密码”两个框，点击【填入】将<b>同时自动填好</b>！
+          </div>
+        </div>
+
+        <div class="rf-action-bar">
+          <select class="rf-select-version" id="rf-select-version"></select>
+          <button class="rf-btn-smart-fill" id="rf-btn-start-agent" style="background: linear-gradient(135deg, #4f46e5, #4338ca); border-color: #6366f1;" title="启动 Zero-PII 符号化 Agent 代填 (支持多经历卡片扩增与搜索下拉框求解)">
+            🤖 Agent代填
+          </button>
+        </div>
+
+        <!-- Agent 运行状态即时交互看板 -->
+        <div id="rf-agent-status-panel" class="rf-hidden" style="display: none; margin: 6px 12px; background: linear-gradient(135deg, #1e1b4b, #312e81); border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 10px; padding: 8px 12px; color: #ffffff; font-size: 11.5px; box-shadow: 0 4px 12px rgba(67, 56, 202, 0.25);">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span id="rf-agent-status-icon">🤖</span>
+              <span id="rf-agent-status-title" style="font-weight: 700; color: #93c5fd;">网申 Agent 待命</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span id="rf-agent-status-badge" style="font-size: 10px; padding: 1px 6px; border-radius: 10px; background: rgba(56, 189, 248, 0.25); color: #38bdf8; font-weight: bold;">就绪</span>
+              <button id="rf-btn-copy-audit" title="一键生成并复制当前页面填充率与未填项 JSON 诊断报告" style="background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); color: #e2e8f0; border-radius: 6px; padding: 1px 6px; font-size: 10px; cursor: pointer;">📊 复制审计</button>
+            </div>
+          </div>
+          <div id="rf-agent-status-msg" style="color: #e2e8f0; line-height: 1.4; font-size: 11px;">点击【Agent代填】即可启动零隐私外发的智能填报循环</div>
+          <div id="rf-agent-resume-action" style="display: none; margin-top: 6px; text-align: right;">
+            <button id="rf-btn-resume-agent" style="background: #10b981; border: none; color: #ffffff; padding: 3px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600;">▶️ 已完成验证，继续推进</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 选项卡导航 -->
+      <div class="rf-tabs-nav" id="rf-tabs-nav">
+        <div class="rf-tab-item active" data-tab="basic">基本信息</div>
+        <div class="rf-tab-item" data-tab="education">教育背景</div>
+        <div class="rf-tab-item" data-tab="internship">工作实习</div>
+        <div class="rf-tab-item" data-tab="project">项目经历</div>
+        <div class="rf-tab-item" data-tab="skills">技能荣誉</div>
+        <div class="rf-tab-item" data-tab="paper-comp">赛事论文</div>
+        <div class="rf-tab-item" data-tab="ai-config">接口设置</div>
+      </div>
+
+      <!-- 交互提示条与模式切换胶囊 -->
+      <div class="rf-quick-hint" id="rf-quick-hint">
+        <span id="rf-hint-text"><b>填报模式</b>：单击或回车直接填入网页，支持打字修改；单击标签复制</span>
+        <div class="rf-mode-switch" id="rf-mode-switch" title="切换填报/修改模式 (快捷键 Alt+E)">
+          <span class="rf-mode-btn active" id="rf-mode-btn-fill" data-mode="fill">填报</span>
+          <span class="rf-mode-btn" id="rf-mode-btn-edit" data-mode="edit">修改</span>
+        </div>
+      </div>
+
+      <!-- 卡片内容体 -->
+      <div class="rf-card-body" id="rf-card-body">
+        <!-- 1. 基本信息面板 -->
+        <div class="rf-tab-panel active" id="panel-basic">
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.name">姓名 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" data-key="basic.name" placeholder="如：张三">
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.gender">性别 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.gender" placeholder="男 / 女">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.ethnicity">民族 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.ethnicity" placeholder="如：汉族">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.birth">生日 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.birth" placeholder="如：1999-01-01">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.political">政治面貌 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.political" placeholder="群众/共青团员/党员">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.height">身高 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.height" placeholder="如：160cm 或 160">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.weight">体重 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.weight" placeholder="如：67kg 或 67">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.phone">手机号码 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.phone" placeholder="11位手机号">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.email">电子邮箱 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.email" placeholder="example@163.com">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.idCard">身份证号 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.idCard" placeholder="身份证号码">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.wechat">微信号 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.wechat" placeholder="微信号码">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.city">现居城市 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.city" placeholder="如：北京市海淀区">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.nativePlace">籍贯 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.nativePlace" placeholder="如：山东济南">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.residence">现居详细地址 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" data-key="basic.residence" placeholder="现居城市+详细门牌号">
+            </div>
+          </div>
+
+          <!-- 拆分：个人网站 与 GitHub -->
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.website">个人网站 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" data-key="basic.website" placeholder="如：https://yourdomain.com">
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.github">GitHub <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" data-key="basic.github" placeholder="如：https://github.com/username">
+            </div>
+          </div>
+
+          <!-- 新增：紧急联系人姓名、关系、电话 -->
+          <div style="margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--border-color);">
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">紧急联系人（选填）</span>
+          </div>
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.emergencyContact">紧急联系人姓名 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.emergencyContact" placeholder="姓名">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.emergencyRelation">与本人关系 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.emergencyRelation" placeholder="父母/配偶/朋友">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.emergencyPhone">紧急联系人电话 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" data-key="basic.emergencyPhone" placeholder="联系电话">
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.jobIntent">求职意向 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.jobIntent" placeholder="如：AI应用开发">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.highestDegree">最高学历 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.highestDegree" placeholder="硕士 / 本科">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-grid-2">
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.country">所在国家 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.country" placeholder="中国">
+              </div>
+            </div>
+            <div class="rf-form-group">
+              <label class="rf-form-label" data-copy-ref="basic.acceptRelocation">接受城市调剂 <span class="rf-lbl-copy-icon">📋</span></label>
+              <div class="rf-input-wrapper">
+                <input type="text" class="rf-form-control" data-key="basic.acceptRelocation" placeholder="是 / 否">
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.selfEval">自我评价 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <textarea class="rf-form-control" data-key="basic.selfEval" placeholder="自我介绍/个人优势简述..."></textarea>
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.selfDescription">自我描述 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <textarea class="rf-form-control" data-key="basic.selfDescription" placeholder="自我描述、性格特质、工作风格与个人亮点..."></textarea>
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="basic.extraInfo">补充说明 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <textarea class="rf-form-control" data-key="basic.extraInfo" placeholder="其他补充说明事项..."></textarea>
+            </div>
+          </div>
+
+          <!-- 家庭关系 / 亲属网申记录 -->
+          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">家庭关系 / 亲属记录</span>
+              <button class="rf-btn-add" id="rf-btn-add-family" style="padding: 4px 8px; font-size: 11px; width: auto; margin: 0;">+ 新增家庭成员</button>
+            </div>
+            <div id="rf-family-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+        </div>
+
+        <!-- 2. 教育背景面板 -->
+        <div class="rf-tab-panel" id="panel-education">
+          <div id="rf-edu-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+          <button class="rf-btn-add" id="rf-btn-add-edu">+ 新增教育经历</button>
+        </div>
+
+        <!-- 3. 工作实习面板 -->
+        <div class="rf-tab-panel" id="panel-internship">
+          <div id="rf-intern-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+          <button class="rf-btn-add" id="rf-btn-add-intern">+ 新增工作实习</button>
+        </div>
+
+        <!-- 4. 项目经历面板 -->
+        <div class="rf-tab-panel" id="panel-project">
+          <div id="rf-proj-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+          <button class="rf-btn-add" id="rf-btn-add-proj">+ 新增项目经历</button>
+        </div>
+
+        <!-- 5. 技能荣誉面板 -->
+        <div class="rf-tab-panel" id="panel-skills">
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="skills">专业技能描述 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <textarea class="rf-form-control" data-key="skills" placeholder="列出编程语言、框架、工具链、技术优势..."></textarea>
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label" data-copy-ref="languages">语言能力 <span class="rf-lbl-copy-icon">📋</span></label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" data-key="languages" placeholder="如：英语六级 / CET-6">
+            </div>
+          </div>
+
+          <div style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); margin-top: 4px;">荣誉奖项列表</div>
+          <div id="rf-honor-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          <button class="rf-btn-add" id="rf-btn-add-honor">+ 新增荣誉奖项</button>
+        </div>
+
+        <!-- 6. 赛事与论文面板 -->
+        <div class="rf-tab-panel" id="panel-paper-comp">
+          <div style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">竞赛 / 赛事经历</div>
+          <div id="rf-comp-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          <button class="rf-btn-add" id="rf-btn-add-comp">+ 新增赛事经验</button>
+
+          <div style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); margin-top: 10px;">论文 / 期刊 / 专利</div>
+          <div id="rf-paper-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          <button class="rf-btn-add" id="rf-btn-add-paper">+ 新增论文/期刊/专利</button>
+        </div>
+
+        <!-- 7. 大模型 AI 配置面板 -->
+        <div class="rf-tab-panel" id="panel-ai-config">
+          <div style="font-size: 12px; font-weight: 700; color: #4f46e5; display: flex; align-items: center; justify-content: space-between;">
+            <span>🤖 大模型接口配置 (AI 智能对齐)</span>
+            <span style="font-size: 10px; font-weight: normal; color: var(--text-muted);">全局共享</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.4; background: #eef2ff; padding: 7px 10px; border-radius: 6px; border: 1px solid #c7d2fe; margin-top: 4px;">
+            💡 用于网申输入框的 99%+ 高精度对齐。支持任何兼容 OpenAI 或 Claude 格式的接口（如 DeepSeek、OpenAI、通义千问等）。
+          </div>
+
+          <div class="rf-form-group" style="margin-top: 8px;">
+            <label class="rf-form-label">接口协议 (Protocol)</label>
+            <div class="rf-input-wrapper">
+              <select class="rf-form-control" id="rf-ai-protocol" style="height: 32px; background: #fff; cursor: pointer;">
+                <option value="openai">OpenAI 兼容协议 (支持大多数中转/国产大模型)</option>
+                <option value="typesafe">⚡ TypeSafe AI (Jev 专精决策模型 - 推荐)</option>
+                <option value="claude">Claude 原生协议 (Anthropic Messages API)</option>
+              </select>
+            </div>
+          </div>
+          <div id="rf-typesafe-tip" style="display: none; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 6px 10px; margin-top: 8px; font-size: 11px; color: #3730a3; line-height: 1.45;">
+            💡 <b>Jev (System-One)</b> 决策模型：推荐通过 <b>OpenRouter</b> 接入（填入 <code>sk-or-v1-...</code> 密钥即可）：<br>
+            <div style="margin-top: 5px; display: flex; gap: 4px;">
+              <button type="button" id="rf-btn-preset-openrouter-jev" style="background: #4f46e5; color: #ffffff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; font-weight: 600;">⚡ 填入 OpenRouter 预设</button>
+              <button type="button" id="rf-btn-preset-typesafe-jev" style="background: #ffffff; color: #334155; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer;">填入官方预设</button>
+            </div>
+          </div>
+          <div class="rf-form-group">
+            <label class="rf-form-label">API 服务地址 (Base URL)</label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" id="rf-ai-base-url" placeholder="如：https://api.openai.com/v1 或 https://api.deepseek.com/v1">
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label">API 密钥 (API Key) *</label>
+            <div class="rf-input-wrapper">
+              <input type="password" class="rf-form-control" id="rf-ai-api-key" placeholder="填入你的 sk-xxxxxxxx 密钥">
+            </div>
+          </div>
+
+          <div class="rf-form-group">
+            <label class="rf-form-label">模型名称 (Model Name)</label>
+            <div class="rf-input-wrapper">
+              <input type="text" class="rf-form-control" id="rf-ai-model" placeholder="如：gpt-4o-mini / deepseek-chat / gpt-4o">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button class="rf-btn-smart-fill" id="rf-btn-test-ai" style="flex: 1; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); box-shadow: none; justify-content: center;">
+              ⚡ 测试连接
+            </button>
+            <button class="rf-btn-smart-fill" id="rf-btn-save-ai" style="flex: 1.2; justify-content: center;">
+              💾 保存配置
+            </button>
+          </div>
+          <div id="rf-ai-test-result" style="font-size: 11px; padding: 6px 8px; border-radius: 4px; display: none; line-height: 1.4; margin-top: 8px;"></div>
+        </div>
+      </div>
+
+      <!-- 底部操作区 -->
+      <div class="rf-footer">
+        <span>数据自动本地保存</span>
+        <div class="rf-footer-btns">
+          <span class="rf-footer-link" id="rf-btn-export" title="导出当前简历数据为 JSON 文件">导出</span>
+          <span>·</span>
+          <span class="rf-footer-link" id="rf-btn-import" title="从 JSON 文件导入简历数据">导入</span>
+          <span>·</span>
+          <span class="rf-footer-link" id="rf-btn-clear" title="清空当前简历数据" style="color: var(--danger);">清空</span>
+          <input type="file" id="rf-file-input" accept=".json" style="display: none;">
+        </div>
+      </div>
+    </div>

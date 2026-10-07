@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "简历自动填充助手",
-  "version": "1.0.1",
-  "description": "求职/秋招必备效率工具，帮助你自动识别和填充简历信息，支持多段经历管理和一键整页智能填充。",
+  "name": "OfferGo-网申简历快速填写助手",
+  "version": "1.1.0",
+  "description": "求职/校招/社招必备效率工具，帮助你自动识别和填充简历信息，支持多段经历管理与 Agent 智能代填。",
   "permissions": [
     "sidePanel",
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "webNavigation"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -19,7 +20,19 @@
     "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "打开简历填充助手"
+    "default_title": "打开 OfferGo 面板",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "content_scripts": [
     {
@@ -30,7 +43,8 @@
         "content.js",
         "floating_card.js"
       ],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "all_frames": true
     }
   ]
 }
