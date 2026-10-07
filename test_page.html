@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>求职网申模拟测试页面 - 简历自动填充助手</title>
+  <title>求职网申模拟测试页面 - OfferGo</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -107,6 +107,30 @@
 
   <form id="mock-form" onsubmit="event.preventDefault(); alert('表单提交成功！可以在控制台查看提交的值。'); console.log(Object.fromEntries(new FormData(this)));">
     
+    <!-- 账号注册与密码设置 (测试智能密码生成与验证码) -->
+    <div class="section">
+      <div class="section-title">账号注册与安全设置 (Account & Security)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="reg_mobile">注册手机号 (Mobile)</label>
+          <input type="tel" id="reg_mobile" name="reg_mobile" placeholder="请输入11位注册手机号">
+        </div>
+        <div class="form-group">
+          <label for="reg_smscode">短信验证码 (SMS Code)</label>
+          <input type="text" id="reg_smscode" name="reg_smscode" placeholder="6位短信验证码" maxlength="6" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label for="reg_password">登录密码 (Password) *</label>
+          <input type="password" id="reg_password" name="password" placeholder="8-16位，必须包含大小写字母、数字和特殊字符">
+          <span style="font-size: 11px; color: #64748b; margin-top: 2px;">要求：8-16位字符，必须包含英文字母大写、小写、数字和特殊符号</span>
+        </div>
+        <div class="form-group">
+          <label for="reg_confirm_pwd">确认密码 (Confirm Password) *</label>
+          <input type="password" id="reg_confirm_pwd" name="confirmPassword" placeholder="请再次输入登录密码">
+        </div>
+      </div>
+    </div>
+
     <!-- 基本信息 -->
     <div class="section">
       <div class="section-title">基本信息 (Basic Info)</div>
@@ -185,11 +209,11 @@
         </div>
         <div class="form-group">
           <label for="residence_province">现居住省 (Residence Province)</label>
-          <input type="text" id="residence_province" name="residenceProvince" placeholder="如：北京市">
+          <input type="text" id="residence_province" name="residenceProvince" placeholder="如：天津市">
         </div>
         <div class="form-group">
           <label for="residence_city">现居住市 (Residence City)</label>
-          <input type="text" id="residence_city" name="residenceCity" placeholder="如：北京市">
+          <input type="text" id="residence_city" name="residenceCity" placeholder="如：天津市">
         </div>
         <div class="form-group">
           <label for="city">现居城市 (Current City)</label>
@@ -197,40 +221,40 @@
         </div>
         <div class="form-group">
           <label for="residence">现居详细地址 (Residence)</label>
-          <input type="text" id="residence" name="residence" placeholder="如：北京市海淀区中关村大街1号">
+          <input type="text" id="residence" name="residence" placeholder="如：北京市海淀区中关村南大街1号">
         </div>
         <div class="form-group">
           <label for="native_province">户籍所在地省 (Native Province)</label>
-          <input type="text" id="native_province" name="nativeProvince" placeholder="如：山东省">
+          <input type="text" id="native_province" name="nativeProvince" placeholder="如：河南省">
         </div>
         <div class="form-group">
           <label for="native_city">户籍所在地市 (Native City)</label>
-          <input type="text" id="native_city" name="nativeCity" placeholder="如：济南市">
+          <input type="text" id="native_city" name="nativeCity" placeholder="如：信阳市">
         </div>
         <div class="form-group">
           <label for="hukou_place">户口所在地 (Hukou Location)</label>
-          <input type="text" id="hukou_place" name="hukouPlace" placeholder="如：山东省济南市">
+          <input type="text" id="hukou_place" name="hukouPlace" placeholder="如：河南省信阳市">
         </div>
         <div class="form-group">
           <label for="source_place">生源所在地 (Source Location)</label>
-          <input type="text" id="source_place" name="sourcePlace" placeholder="如：山东省济南市">
+          <input type="text" id="source_place" name="sourcePlace" placeholder="如：河南省信阳市">
         </div>
         <div class="form-group" style="position: relative;">
           <label for="native_place">籍贯 (Hometown - 模拟级联选择)</label>
-          <input type="text" id="native_place" name="nativePlace" placeholder="如：山东省济南市" class="cascader-input">
+          <input type="text" id="native_place" name="nativePlace" placeholder="如：河南省信阳市" class="cascader-input">
           <div id="demo-cascader-menu" class="ant-cascader-menus" style="display: none; position: absolute; top: 62px; left: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); z-index: 100;">
             <ul class="ant-cascader-menu" style="list-style: none; padding: 4px; border-right: 1px solid #e2e8f0; max-height: 140px; overflow-y: auto;">
               <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">北京</li>
+              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">天津</li>
               <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">河北</li>
-              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px; background: #eef2ff; color: #4f46e5; font-weight: 600;">山东</li>
-              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">浙江</li>
-              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">江苏</li>
+              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px; background: #eef2ff; color: #4f46e5; font-weight: 600;">河南</li>
+              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">山东</li>
             </ul>
             <ul class="ant-cascader-menu" style="list-style: none; padding: 4px; max-height: 140px; overflow-y: auto;">
-              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px; background: #eef2ff; color: #4f46e5; font-weight: 600;">济南</li>
-              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">青岛</li>
-              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">烟台</li>
-              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">潍坊</li>
+              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">郑州</li>
+              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px; background: #eef2ff; color: #4f46e5; font-weight: 600;">信阳</li>
+              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">洛阳</li>
+              <li class="ant-cascader-menu-item" style="padding: 4px 10px; cursor: pointer; font-size: 12px;">开封</li>
             </ul>
           </div>
         </div>
@@ -268,7 +292,7 @@
         </div>
 
         <!-- 模拟真实北森/大易 (baictruck.zhiye.com) Phoenix 凤凰组件树 -->
-        <div class="form-group full-width" style="margin-top: 8px; padding: 12px; background: #f1f5f9; border-radius: 8px; border: 1px dashed #cbd5e1;">
+        <div class="demo-beisen-fixture form-group full-width" style="margin-top: 8px; padding: 12px; background: #f1f5f9; border-radius: 8px; border: 1px dashed #cbd5e1;">
           <div style="font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 13px;">🏛️ 模拟北森/大易 (zhiye.com) 真实组件DOM结构：</div>
           
           <!-- 北森身份证号 (Label在前置兄弟容器，input在control深层子树) -->
@@ -446,10 +470,103 @@
           </div>
         </div>
       </div>
+      <!-- 未映射/缺数据字段：应被审计为人工或数据源缺失，而不是重复消耗 Agent 轮次 -->
+      <div class="form-group full-width" style="margin: 10px 0; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+        <label style="font-weight:700; display:block; margin-bottom:8px;">恢复任务分类回归场景</label>
+        <label>推荐码 <input id="demo-unmapped-code" placeholder="推荐码"></label>
+        <label>简历附件 <input id="demo-missing-attachment" type="file" name="resume_file"></label>
+        <label>真实姓名 <input id="demo-retryable-name" placeholder="姓名"></label>
+      </div>
 
-      <!-- 次高教育经历 (本科) -->
-      <div class="sub-section">
-        <div class="sub-section-title">教育经历 2 (大学本科经历)</div>
+      <!-- 图形验证码：必须由用户手动完成，Agent 只检测并暂停 -->
+      <div class="form-group full-width" style="margin: 10px 0; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px;">
+        <label style="color: #991b1b; font-weight: 700; display:block; margin-bottom:8px;">登录安全验证（人工完成）</label>
+        <div class="captcha-widget"><input id="demo-image-captcha" placeholder="请输入右侧图形验证码" aria-label="图形验证码"><span class="captcha-image" aria-label="图形验证码图片">S X 9 Z</span></div>
+      </div>
+
+      <!-- Moka 常见：单选候选项会包含文本 input，不能被当作普通表单字段或计入完成率 -->
+      <div class="form-group full-width moka-form" style="margin: 10px 0; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px;">
+        <label style="color: #166534; font-weight: 700; display:block; margin-bottom:8px;">Moka 候选项过滤回归场景</label>
+        <div class="moka-radio-group" role="radiogroup" aria-label="性别">
+          <label role="radio"><input type="radio" name="demo_gender" value="男"><input class="moka-option-input" readonly value="男"></label>
+          <label role="radio"><input type="radio" name="demo_gender" value="女"><input class="moka-option-input" readonly value="女"></label>
+        </div>
+        <div class="moka-select-option" role="option"><input class="moka-option-input" readonly value="共青团员"></div>
+        <div class="moka-select-option" role="option"><input class="moka-option-input" readonly value="硕士"></div>
+        <label>真实备注字段 <input id="demo-moka-real-field" placeholder="真实备注字段"></label>
+      </div>
+
+      <!-- 北森 Phoenix：真实网申常见的 div 下拉、受控日期与至今联动回归场景 -->
+      <div class="form-group full-width" style="margin: 10px 0; background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 12px;">
+        <label style="color: #9a3412; font-weight: 700; display: block; margin-bottom: 8px;">北森 Phoenix 求职意向与起止时间回归场景</label>
+        <div class="form-item phoenix__form-item" style="margin-bottom: 10px;">
+          <div class="form-item-label phoenix__form-item-label"><label>期望从事职业 *</label></div>
+          <div class="form-item-control phoenix__form-item-control">
+            <div class="phoenix-select phoenix-select--single" id="demo-phoenix-job-intent" tabindex="0" aria-label="期望从事职业"><span class="phoenix-select__placeholder">请选择</span></div>
+          </div>
+        </div>
+        <div class="form-item phoenix__form-item" style="margin-bottom: 10px;">
+          <div class="form-item-label phoenix__form-item-label"><label>开始时间 *</label></div>
+          <div class="form-item-control phoenix__form-item-control"><input class="phoenix__input phoenix-date-picker" name="work_start" placeholder="YYYY-MM" readonly></div>
+        </div>
+        <div class="form-item phoenix__form-item">
+          <div class="form-item-label phoenix__form-item-label"><label>结束时间 *</label></div>
+          <div class="form-item-control phoenix__form-item-control"><input class="phoenix__input phoenix-date-picker" name="work_end" placeholder="YYYY-MM" readonly> <label style="display:inline; margin-left:8px;"><input type="checkbox" name="work_end_present"> 至今</label></div>
+        </div>
+      </div>
+      <script>
+        (() => {
+          // 测试专用：模拟北森日期控件接受受控 input/change 后的状态同步。
+          document.querySelectorAll('.phoenix-date-picker').forEach(input => {
+            input.addEventListener('input', () => { input.dataset.committedValue = input.value; });
+          });
+          const root = document.getElementById('demo-phoenix-job-intent');
+          if (!root) return;
+          root.addEventListener('click', () => {
+            if (document.getElementById('demo-phoenix-options')) return;
+            const list = document.createElement('div');
+            list.id = 'demo-phoenix-options';
+            list.className = 'phoenix-selectList';
+            list.style.cssText = 'position:absolute;z-index:999;background:#fff;border:1px solid #fb923c;border-radius:6px;padding:4px;margin-top:4px;min-width:220px;';
+            ['计算机·网络·技术类', '产品类', '质量管理/测试', '运营类'].forEach(text => {
+              const item = document.createElement('div');
+              item.className = 'phoenix-selectList__listItem';
+              item.textContent = text;
+              item.style.cssText = 'padding:6px 8px;cursor:pointer;';
+              item.addEventListener('click', event => {
+                event.stopPropagation();
+                root.textContent = text;
+                root.dataset.selected = text;
+                list.remove();
+                root.dispatchEvent(new Event('change', { bubbles: true }));
+              });
+              list.appendChild(item);
+            });
+            root.after(list);
+          });
+        })();
+      </script>
+
+      <!-- 模拟 Ant Design 搜索联想框 (最高学历院校 Combobox 自动化求解测试) -->
+      <div class="form-group full-width" style="margin: 10px 0; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 12px;">
+        <label style="color: #3730a3; font-weight: 700;">🏛️ 院校搜索联想框 (Combobox 智能搜索与点击闭环测试)</label>
+        <div class="ant-select" style="position: relative; margin-top: 6px;">
+          <input type="text" id="demo-school-combobox" role="combobox" placeholder="输入关键字搜索院校 (如：北京/清华/浙江)..." style="width: 100%; padding: 8px 12px; border: 1px solid #818cf8; border-radius: 6px; box-sizing: border-box;">
+          <div id="demo-school-dropdown" class="ant-select-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); z-index: 100; max-height: 160px; overflow-y: auto;">
+          </div>
+        </div>
+      </div>
+
+      <!-- 动态经历增加按钮 (+ 添加教育背景) -->
+      <div style="margin: 12px 0;">
+        <button type="button" id="btn-add-edu-card" style="background: #eef2ff; color: #4338ca; border: 1px dashed #6366f1; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+          <span>+</span> 添加一段教育背景
+        </button>
+      </div>
+
+      <!-- 次高教育经历 (本科，默认折叠未挂载，模拟真实网申必须点击添加后才出现的卡片) -->
+      <div class="sub-section" id="edu-card-2" style="display: none;">
+        <div class="sub-section-title">教育经历 2 (大学本科经历 - 由 Agent 动态点击添加卡片)</div>
         <div class="form-grid">
           <div class="form-group">
             <label>本科学校名称 (Bachelor School)</label>
@@ -547,6 +664,30 @@
             <label>职责与工作描述 (Description)</label>
             <textarea name="work_desc_1" placeholder="描述你的实习工作职责和内容..."></textarea>
           </div>
+          <div class="form-group">
+            <label>证明人 (是否有证明人)</label>
+            <input type="text" name="work_witness_1" placeholder="有 / 无">
+          </div>
+          <div class="form-group">
+            <label>证明人姓名 (Witness Name)</label>
+            <input type="text" name="work_witness_name_1" placeholder="证明人姓名">
+          </div>
+          <div class="form-group">
+            <label>证明人关系 (Relationship)</label>
+            <input type="text" name="work_witness_rel_1" placeholder="如：直属领导/带教">
+          </div>
+          <div class="form-group">
+            <label>证明人职务 (Position)</label>
+            <input type="text" name="work_witness_pos_1" placeholder="如：带教/主管">
+          </div>
+          <div class="form-group">
+            <label>证明人单位 (Company)</label>
+            <input type="text" name="work_witness_comp_1" placeholder="证明人单位">
+          </div>
+          <div class="form-group">
+            <label>证明人联系方式 (Contact)</label>
+            <input type="text" name="work_witness_phone_1" placeholder="电话或微信号">
+          </div>
         </div>
       </div>
     </div>
@@ -626,18 +767,79 @@
     <!-- 家庭成员社会关系模拟 (国企/大厂网申高频) -->
     <div class="section">
       <div class="section-title">家庭成员与主要社会关系 (Family Information)</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>父亲姓名 (Father Name)</label>
-          <input type="text" name="father_name" placeholder="如：张某某">
+      <div class="sub-section">
+        <div class="sub-section-title">家庭成员 1 (父亲)</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>与本人关系</label>
+            <input type="text" name="family_rel_1" placeholder="如：父亲">
+          </div>
+          <div class="form-group">
+            <label>亲属姓名 (Father Name)</label>
+            <input type="text" name="father_name" placeholder="如：张某某">
+          </div>
+          <div class="form-group">
+            <label>年龄</label>
+            <input type="text" name="father_age" placeholder="年龄">
+          </div>
+          <div class="form-group">
+            <label>政治面貌</label>
+            <input type="text" name="father_political" placeholder="群众/党员">
+          </div>
+          <div class="form-group">
+            <label>工作单位 (Company)</label>
+            <input type="text" name="father_company" placeholder="工作单位名称">
+          </div>
+          <div class="form-group">
+            <label>工作部门 (Department)</label>
+            <input type="text" name="father_department" placeholder="工作部门">
+          </div>
+          <div class="form-group">
+            <label>职务 (Position)</label>
+            <input type="text" name="father_position" placeholder="担任职务">
+          </div>
+          <div class="form-group">
+            <label>联系电话 (Phone)</label>
+            <input type="text" name="father_phone" placeholder="手机号码">
+          </div>
         </div>
-        <div class="form-group">
-          <label>父亲工作单位 (Company)</label>
-          <input type="text" name="father_company" placeholder="工作单位名称">
-        </div>
-        <div class="form-group">
-          <label>父亲联系电话 (Phone)</label>
-          <input type="text" name="father_phone" placeholder="手机号码">
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-section-title">家庭成员 2 (母亲)</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>与本人关系</label>
+            <input type="text" name="family_rel_2" placeholder="如：母亲">
+          </div>
+          <div class="form-group">
+            <label>亲属姓名 (Mother Name)</label>
+            <input type="text" name="mother_name" placeholder="母亲姓名">
+          </div>
+          <div class="form-group">
+            <label>年龄</label>
+            <input type="text" name="mother_age" placeholder="年龄">
+          </div>
+          <div class="form-group">
+            <label>政治面貌</label>
+            <input type="text" name="mother_political" placeholder="群众/党员">
+          </div>
+          <div class="form-group">
+            <label>工作单位 (Company)</label>
+            <input type="text" name="mother_company" placeholder="工作单位名称">
+          </div>
+          <div class="form-group">
+            <label>工作部门 (Department)</label>
+            <input type="text" name="mother_department" placeholder="工作部门">
+          </div>
+          <div class="form-group">
+            <label>职务 (Position)</label>
+            <input type="text" name="mother_position" placeholder="担任职务">
+          </div>
+          <div class="form-group">
+            <label>联系电话 (Phone)</label>
+            <input type="text" name="mother_phone" placeholder="手机号码">
+          </div>
         </div>
       </div>
     </div>
@@ -665,11 +867,65 @@
         <div class="form-group question-item" style="padding: 10px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
           <label style="font-weight: 600; color: #334155;">3. 是否同意公司对所填信息进行入职背景调查与学历核验？ *</label>
           <div style="display: flex; gap: 16px; margin-top: 6px;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="radio" name="punish" value="是"> 是</label>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="radio" name="punish" value="否"> 否</label>
+          </div>
+        </div>
+
+        <div class="form-group question-item" style="padding: 10px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <label style="font-weight: 600; color: #334155;">3. 是否同意公司对所填信息进行入职背景调查与学历核验？ *</label>
+          <div style="display: flex; gap: 16px; margin-top: 6px;">
             <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="radio" name="bg_check" value="是"> 是 (同意)</label>
             <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="radio" name="bg_check" value="否"> 否 (拒绝)</label>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 简历附件上传模拟 (<input type="file"> 自动挂载) -->
+    <div class="section">
+      <div class="section-title">简历附件与作品集上传 (Resume Attachment Upload)</div>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="resume_file_input">上传个人简历附件 (支持 PDF/Word 自动挂载) *</label>
+          <input type="file" id="resume_file_input" name="resume_file" accept=".pdf,.doc,.docx">
+        </div>
+      </div>
+    </div>
+
+    <!-- 嵌套 iframe 招聘子表单模拟 (测试跨 Frame 穿透) -->
+    <div class="section">
+      <div class="section-title">嵌入式子框架表单 (Embedded iFrame Portal)</div>
+      <iframe id="embedded-ats-iframe" style="width: 100%; height: 150px; border: 1px dashed #94a3b8; border-radius: 8px; background: #f8fafc;" srcdoc='
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: sans-serif; margin: 12px; color: #334155; }
+            .row { display: flex; gap: 12px; margin-bottom: 10px; }
+            .col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+            label { font-size: 12px; font-weight: 600; }
+            input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
+          </style>
+        </head>
+        <body>
+          <div class="row">
+            <div class="col">
+              <label>子框架-候选人姓名</label>
+              <input type="text" name="iframe_name" placeholder="请输入姓名">
+            </div>
+            <div class="col">
+              <label>子框架-联系电话</label>
+              <input type="text" name="iframe_phone" placeholder="请输入手机号码">
+            </div>
+            <div class="col">
+              <label>子框架-电子邮箱</label>
+              <input type="email" name="iframe_email" placeholder="请输入电子邮箱">
+            </div>
+          </div>
+        </body>
+        </html>
+      '></iframe>
     </div>
 
     <!-- 用户协议与条款模拟 -->
@@ -717,6 +973,60 @@
       birthdayInput.addEventListener("change", validateBirthday);
       birthdayInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") validateBirthday();
+      });
+    }
+
+    // 模拟真实网申点击【+ 添加一段教育背景】动态挂载第 2 个卡片
+    const btnAddEdu = document.getElementById("btn-add-edu-card");
+    const eduCard2 = document.getElementById("edu-card-2");
+    if (btnAddEdu && eduCard2) {
+      btnAddEdu.addEventListener("click", () => {
+        eduCard2.style.display = "block";
+        btnAddEdu.style.display = "none";
+      });
+    }
+
+    // 模拟真实 Ant Design / Element 院校搜索联想下拉
+    const schoolInput = document.getElementById("demo-school-combobox");
+    const schoolDropdown = document.getElementById("demo-school-dropdown");
+    const mockSchools = [
+      "北京大学", "清华大学", "浙江大学", "复旦大学", "上海交通大学",
+      "南京大学", "中国科学技术大学", "武汉大学", "华中科技大学", "山东大学"
+    ];
+
+    function renderSchoolDropdown(filterText) {
+      if (!schoolDropdown) return;
+      const q = (filterText || "").trim().toLowerCase();
+      const filtered = q ? mockSchools.filter(s => s.toLowerCase().includes(q)) : mockSchools;
+      if (filtered.length === 0) {
+        schoolDropdown.innerHTML = '<div style="padding: 8px; color: #94a3b8; font-size: 12px;">无匹配院校</div>';
+      } else {
+        schoolDropdown.innerHTML = filtered.map(s => `
+          <div role="option" class="ant-select-item-option-content" style="padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f1f5f9;">
+            ${s}
+          </div>
+        `).join("");
+
+        schoolDropdown.querySelectorAll("[role='option']").forEach(opt => {
+          opt.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            const chosen = opt.textContent.trim();
+            schoolInput.value = chosen;
+            schoolDropdown.style.display = "none";
+            schoolInput.dispatchEvent(new Event("change", { bubbles: true }));
+          });
+        });
+      }
+      schoolDropdown.style.display = "block";
+    }
+
+    if (schoolInput && schoolDropdown) {
+      schoolInput.addEventListener("focus", () => renderSchoolDropdown(schoolInput.value));
+      schoolInput.addEventListener("input", () => renderSchoolDropdown(schoolInput.value));
+      document.addEventListener("click", (e) => {
+        if (!schoolInput.contains(e.target) && !schoolDropdown.contains(e.target)) {
+          schoolDropdown.style.display = "none";
+        }
       });
     }
   </script>

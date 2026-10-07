@@ -31,8 +31,15 @@ yarn-error.log*
 package-lock.json
 *.log
 agent_debug.log
+# 验证码接收服务的运行日志（可能含本机局域网 IP，禁止入仓）
+tools/sms_server.log
+tools/*.log
+
+# 开源版不发布验证码接收服务，整个 tools/ 目录不入仓
+tools/
 
 # 临时文件
 *.tmp
 *.swp
 *.bak
+*.bak-*

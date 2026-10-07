@@ -1,9 +1,9 @@
-# 📄 简历辅助填充助手 (Resume Filler Extension)
+# 🚀 OfferGo-网申简历快速填写助手
 
 <p align="center">
   <img src="https://img.shields.io/badge/Manifest-V3-blue?style=flat-square" alt="Manifest V3" />
   <img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Extension" />
-  <img src="https://img.shields.io/badge/Release-v1.0.1-indigo?style=flat-square" alt="Release" />
+  <img src="https://img.shields.io/badge/Release-v1.1.0-indigo?style=flat-square" alt="Release" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
   <img src="https://img.shields.io/badge/Data%20Privacy-100%25%20Local-success?style=flat-square" alt="Local Privacy" />
   <a href="https://linux.do/"><img src="https://img.shields.io/badge/LINUX%20DO-Community-blueviolet?style=flat-square" alt="LINUX DO" /></a>
@@ -26,7 +26,7 @@
 
 在求职季（春秋招、社招网申）中，各企业招聘网站的表单设计千差万别，全自动脚本往往容易错填或被前端校验拦截；而传统的复制粘贴需要在多个窗口或简历文档间来回切换，繁琐且费时。
 
-**简历辅助填充助手** 专注于打造**最跟手、最可控、最便携**的网申辅助体验：
+**OfferGo** 专注于打造**最跟手、最可控、最便携**的网申辅助体验：
 - **🫧 智能气泡，指哪填哪**：光标停在哪个输入框，就近智能推荐对应内容，无需低头翻找。
 - **🪄 大模型 AI 深度重诊**：遇到复杂或疑难输入框，一键呼叫大模型进行高精度语义对齐，零隐私泄露。
 - **🎯 点击选项，直接填入**：直接轻点卡片里的各个选项即可自动填入当前光标所在的输入框；点击标签亦可一键复制。
@@ -77,6 +77,13 @@
   - 支持配置任意兼容 OpenAI 接口标准的 API（如 OpenAI、DeepSeek、Moonshot、通义千问等）。
   - 可在面板中随时对“自我评价”、“实习职责”、“项目成果”等长文本进行智能提炼与字句打磨。
 
+- 🔑 **智能密码生成器（按格式要求生成合规强密码并双框填入）**
+  - **自然语言规则理解**：输入任何格式要求（如“8-16位，必须包含大写字母、小写字母、数字和特殊字符”），AI 自动理解并生成完全符合要求的随机高强度密码。
+  - **网页提示自动提取**：点击 **`🔍 提取网页提示`**，插件自动抓取当前页面密码框附近的规则提示文案填入规则区。
+  - **双框同时填入（注册必备）**：若注册页面同时包含“登录密码”与“确认密码”两个输入框，点击 **`⚡ 填入密码框`** 会**同时自动填好主密码和确认密码**，原生事件穿透，绝无“两次密码输入不一致”烦恼。
+  - **气泡就地填入**：光标停在密码框时，原地气泡直接提示 **`🔑 密码`**，轻点 **`⚡ 智能生成并填入`** 即刻一秒填好。
+  - **本地算法兜底保底**：即使未配置大模型 API Key 或网络离线，内置高精度规则求解器与加密强随机数生成器（`crypto.getRandomValues`）也能 100% 秒级生成合规密码。
+  - **💾 站点密码备忘录（防止后续登录遗忘）**：一键保存生成的密码与对应招聘站点、手机号关联记录；下次登录时，卡片内不仅直接展示 **`📌 本站已保存密码`**，密码框聚焦气泡亦会自动推荐 **`🔖 已存密码`**，点击一秒填入！同时支持全站点密码搜索与 JSON 备份导出。
 - 🔒 **100% 本地存储与隐私保护**
   - 数据完全存储于浏览器 `chrome.storage.local`，无任何后端上报，无用户追踪，完全离线可用。
 
@@ -87,7 +94,7 @@
 ### 方式一：直接下载 Release 安装包（推荐）
 
 1. 前往 GitHub 右侧的 **[Releases](https://github.com/Suara17/resume-filler-extension/releases)** 页面。
-2. 下载最新版的 `resume-filler-extension-v1.0.1.zip` 并解压到本地文件夹。
+2. 下载最新版的 `OfferGo-v1.1.0.zip` 并解压到本地文件夹。
 3. 打开 Chrome / Edge 浏览器，在地址栏输入：
    ```text
    chrome://extensions/
@@ -108,39 +115,74 @@ git clone https://github.com/Suara17/resume-filler-extension.git
 
 ## 🚀 快速上手流程
 
-1. **导入/录入简历数据**：
-   - 打开浏览器侧边栏（Side Panel）或点击扩展图标。
-   - 点击底部的 **「导入 JSON」**，选择项目中自带的 `resume_demo.json` 即可一秒体验完整的演示数据；也可导入你自己配置好的 JSON 文件。
-2. **体验智能跟手填写**：
-   - 打开项目内置的离线测试页面 `test_page.html`（或任意真实招聘网站）。
-   - 点击任意输入框，查看**原地弹出的智能推荐气泡**，轻点一下直接填入！
-   - 或者展开右下角的**悬浮卡片**：先鼠标点击网页上的目标输入框，再**直接轻点卡片里对应的选项**，内容即刻自动填入网页输入框！若需要复制，直接点击字段标题标签（Label）即可复制到剪贴板。
+1. **录入简历数据**
+   - 打开浏览器侧边栏（Side Panel）或点击扩展图标；
+   - 点击 **「导入 JSON」** 选择项目中自带的 `resume_demo.json` 可一秒体验演示数据，也可导入你自己配置好的 JSON；
+   - 手上只有 PDF/Word 简历？点 **「🪄 AI提取」** 粘贴全文，大模型自动结构化录入；
+   - 在 **「📎 附件管理」** 里绑定简历、成绩单、学籍报告、证书等文件，遇到网页上传框会自动挂载。
+
+2. **🤖 一键 Agent 代填（推荐主力）**
+   - 打开目标网申页面，点击悬浮卡片上的 **「🤖 Agent代填」**；
+   - Agent 会分多轮自动完成：**端侧极速预填 → 复杂控件语义对齐 → 搜索下拉框闭环求解 → 红字校验修复 → 安全翻页**；
+   - 卡片内显示**实时进度看板**（第几轮、正在填哪个板块）；遇到验证码/滑块会**自动暂停**并提示你人工接管，处理完点「▶️ 继续推进」即可；
+   - 填完给出**整页填充率报告**，点 **「📊 复制审计」** 可导出诊断 JSON。
+
+3. **🎯 手动跟手微调（Agent 没覆盖到的细节）**
+   - 点击任意输入框 → 原地弹出**智能推荐气泡**，轻点一下直接填入；
+   - 或展开右下角**悬浮卡片**：先点网页上的目标输入框，再轻点卡片里对应选项即可填入；点字段标题（Label）则可一键复制；
+   - 点 **🌐** 可设置"本网站是否自动弹气泡"；日常浏览网页时不会打扰你。
+
+4. **🔑 遇到注册密码框与站点密码备忘**
+   - 光标落到密码框时，气泡会变成 **`🔑 密码`**，轻点 **`⚡ 智能生成并填入`**；
+   - 插件会按页面提示的格式要求生成合规强密码，并**同时填好「登录密码 + 确认密码」**两个框；
+   - 点击 **`💾 保存此站`** 可将密码与账号保存为当前站点专属备忘；日后登录时卡片直接显示 **`📌 本站已保存密码`**，输入框气泡亦优先推荐 **`🔖 已存密码`**，一键填回！同时可在侧边栏集中搜索、管理与备份全站点求职密码。
 
 ---
 
 ## 📂 项目结构
 
 ```text
-resume-filler-extension/
-├── assets/
-│   └── preview.svg            # 交互与功能高保真示意图
+OfferGo/
+├── src/                       # 核心模块化源码（各业务板块细化拆分，单文件轻量易维护）
+│   ├── content/               # 网页端内容注入模块（DOM 探测、ATS 适配、智能求解器等）
+│   ├── card/                  # 悬浮面板模块（独立 styles.css 与 template.html，视图与事件交互）
+│   ├── background/            # 后台 Service Worker 模块（Agent ReAct 调度、Frame 广播通信等）
+│   └── sidepanel/             # 侧边栏工作台模块（经历管理、附件管理、AI 接口等）
+├── build.js                   # 零依赖模块编译器（执行 node build.js 或 npm run build，极速秒级装配）
+├── assets/                    # 演示图与交互矢量示意图
+├── icons/                     # 扩展图标（16/32/48/128 与矢量源文件）
 ├── manifest.json              # Chrome 扩展 Manifest V3 核心配置文件
-├── background.js              # 扩展后台 Service Worker（管理快捷调用与侧边栏唤起）
-├── content.js                 # 网页内容脚本：负责页面 DOM 探测与智能气泡推荐
-├── floating_card.js           # 页面悬浮交互面板（点击选项直接填入、点击标签复制等）
+├── background.js              # 扩展后台 Service Worker（编译单入口）
+├── content.js                 # 网页内容脚本（编译单入口）
+├── floating_card.js           # 页面悬浮交互面板（编译单入口）
 ├── sidepanel.html             # Chrome 侧边栏页面
-├── sidepanel.js               # 侧边栏逻辑与数据持久化
-├── style.css                  # 样式文件
+├── sidepanel.js               # 侧边栏逻辑与数据持久化（编译单入口）
+├── style.css                  # 侧边栏样式文件
 ├── test_page.html             # 本地离线综合表单测试页面
 ├── resume_template.json       # 空白简历结构标准模板
 ├── resume_demo.json           # 示例脱敏演示数据（张三）
 ├── agent_logs.js              # Agent 专用结构化诊断日志提取与监听工具
+├── CHANGELOG.md               # 版本更新日志
 ├── .gitignore                 # Git 忽略规则（保护个人真实简历防误传）
 ├── LICENSE                    # MIT 开源许可证
 └── README.md                  # 本说明文档
 ```
 
 ---
+
+## 🛠️ 模块化二次开发
+
+本项目源码已采用**零依赖、模块化**架构，业务逻辑分拆在 `src/` 各子目录中（样式 `styles.css` 与模板 `template.html` 均已独立，告别在单文件中维护长达数千行的体验）：
+
+```bash
+# 单次极速装配构建 (耗时约 20ms)
+npm run build
+# 或 node build.js
+
+# 热重载监听模式 (保存即自动装配)
+npm run watch
+```
+编译产物直接输出在项目根目录，Chrome 扩展依然可以直接“加载已解压的扩展程序”，无需任何构建依赖或 npm 安装。
 
 ## 🔒 隐私与安全性
 
@@ -159,4 +201,3 @@ resume-filler-extension/
 
 > 本开源项目已链接认可 [LINUX DO](https://linux.do/) 社区。  
 > 感谢 LINUX DO 社区技术交流与开源探索精神的支持与启发！
-

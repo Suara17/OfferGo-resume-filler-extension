@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+  <defs>
+    <!-- 背景渐变：深邃暮色靛青到活力电光紫 -->
+    <linearGradient id="rf-bg-grad" x1="16" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#282566"/>
+      <stop offset="48%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+
+    <!-- 闪电徽章渐变：天青蓝到高亮青蓝 -->
+    <linearGradient id="rf-bolt-grad" x1="72" y1="72" x2="114" y2="114" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="50%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+
+    <!-- 柔和阴影滤镜 -->
+    <filter id="rf-paper-shadow" x="18" y="18" width="80" height="96" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.36"/>
+    </filter>
+
+    <filter id="rf-badge-shadow" x="62" y="62" width="56" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="3" stdDeviation="4.5" flood-color="#0f172a" flood-opacity="0.45"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#0ea5e9" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- 1. 圆角底座 Squircle -->
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#rf-bg-grad)"/>
+  <!-- 底座微高光边缘 -->
+  <rect x="6.5" y="6.5" width="115" height="115" rx="25.5" stroke="#ffffff" stroke-opacity="0.22" stroke-width="1"/>
+
+  <!-- 2. 简历白色卡片 -->
+  <g filter="url(#rf-paper-shadow)">
+    <rect x="25" y="21" width="62" height="78" rx="10" fill="#ffffff"/>
+  </g>
+
+  <!-- 卡片内部极简信息条 -->
+  <!-- 顶部头像块 -->
+  <rect x="33" y="29" width="14" height="14" rx="4.5" fill="#6366f1"/>
+  <!-- 姓名大条 -->
+  <rect x="52" y="30.5" width="26" height="4.5" rx="2.25" fill="#1e293b" fill-opacity="0.9"/>
+  <!-- 岗位小条 -->
+  <rect x="52" y="37.5" width="17" height="3" rx="1.5" fill="#94a3b8" fill-opacity="0.8"/>
+
+  <!-- 分割线 -->
+  <line x1="33" y1="48" x2="79" y2="48" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <!-- 经历段落 1 -->
+  <rect x="33" y="53" width="26" height="4" rx="2" fill="#4338ca" fill-opacity="0.85"/>
+  <rect x="33" y="60" width="44" height="3" rx="1.5" fill="#cbd5e1"/>
+  <rect x="33" y="65.5" width="34" height="3" rx="1.5" fill="#cbd5e1" fill-opacity="0.85"/>
+
+  <!-- 经历段落 2 -->
+  <rect x="33" y="73" width="22" height="4" rx="2" fill="#6366f1" fill-opacity="0.8"/>
+  <rect x="33" y="80" width="30" height="3" rx="1.5" fill="#cbd5e1" fill-opacity="0.8"/>
+
+  <!-- 3. 右下角闪电徽章 -->
+  <g filter="url(#rf-badge-shadow)">
+    <circle cx="92" cy="92" r="23" fill="url(#rf-bolt-grad)" stroke="#ffffff" stroke-width="2.5"/>
+  </g>
+  <!-- 纯白极简闪电符号 -->
+  <polygon points="93.5,77 84,93 91,93 89,107 101,90.5 94,90.5" fill="#ffffff"/>
+
+  <!-- 4. 星芒装饰 -->
+  <path d="M21 21 Q21 24.5 17.5 24.5 Q21 24.5 21 28 Q21 24.5 24.5 24.5 Q21 24.5 21 21 Z" fill="#ffffff" fill-opacity="0.95"/>
+  <path d="M107 27 Q107 29.5 104.5 29.5 Q107 29.5 107 32 Q107 29.5 109.5 29.5 Q107 29.5 107 27 Z" fill="#e0e7ff" fill-opacity="0.85"/>
+</svg>

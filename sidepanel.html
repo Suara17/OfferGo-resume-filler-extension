@@ -3,34 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>简历自动填充助手</title>
+  <title>OfferGo-网申简历快速填写助手</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Header -->
   <div class="header">
     <div class="header-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span class="header-logo" style="font-size: 16px;">🪄</span>
-        <span style="font-size: 14px; font-weight: 600;">简历填充助手</span>
+      <div style="display: flex; align-items: center; gap: 7px;">
+        <span class="header-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+            <rect x="3.5" y="2.5" width="13" height="17" rx="2.6" stroke="#4338ca" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="6.5" y1="6.5" x2="11" y2="6.5" stroke="#4338ca" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="6.5" y1="10" x2="13.5" y2="10" stroke="#4338ca" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.85"/>
+            <line x1="6.5" y1="13.5" x2="10.5" y2="13.5" stroke="#4338ca" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.75"/>
+            <circle cx="16.5" cy="16.5" r="5" fill="#0ea5e9" stroke="#ffffff" stroke-width="1.5"/>
+            <path d="M17 13.8L14.9 16.6H16.9L16.1 19.2L18.8 16.3H16.9L17 13.8Z" fill="#ffffff"/>
+          </svg>
+        </span>
+        <span style="font-size: 14px; font-weight: 700;">OfferGo</span>
       </div>
       <!-- 简历版本管理与切换 -->
       <div style="display: flex; align-items: center; gap: 4px;">
-        <select id="select-resume-version" class="form-control" style="width: 110px; padding: 4px 6px !important; font-size: 11px; height: 26px; border-radius: var(--radius-sm); margin-right: 2px;"></select>
-        <button class="field-btn" id="btn-resume-rename" title="重命名当前版本" style="padding: 2px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="field-btn" id="btn-resume-add" title="另存为新版本" style="padding: 2px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-        <button class="field-btn" id="btn-resume-delete" title="删除当前版本" style="padding: 2px; color: var(--danger-color);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2-2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        <select id="select-resume-version" class="form-control" style="width: 112px; padding: 3px 8px !important; font-size: 11.5px; height: 26px; border-radius: var(--radius-sm); margin-right: 2px; background: #f8fafc;"></select>
+        <button class="field-btn" id="btn-resume-rename" title="重命名当前版本" style="padding: 3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="field-btn" id="btn-resume-add" title="另存为新版本" style="padding: 3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        <button class="field-btn" id="btn-resume-delete" title="删除当前版本" style="padding: 3px; color: var(--danger-color);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2-2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" id="btn-smart-fill" title="自动识别当前网页的所有输入框并填充">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
-        智能填充整页
+      <button class="btn btn-primary" id="btn-agent-autofill" style="background: linear-gradient(135deg, #4f46e5, #4338ca); border-color: #6366f1;" title="启动 Zero-PII 符号化 Agent 代填 (支持多经历卡片扩增与搜索下拉框求解)">
+        🤖 Agent代填
       </button>
-      <button class="btn btn-secondary" id="btn-import">
-        导入 JSON
+      <button class="btn btn-secondary" id="btn-import" title="导入 JSON 配置文件">
+        导入
       </button>
-      <button class="btn btn-secondary" id="btn-export">
+      <button class="btn btn-secondary" id="btn-ai-extract" title="粘贴纯文本简历，使用大模型自动提取并录入">
+        🪄 AI提取
+      </button>
+      <button class="btn btn-secondary" id="btn-export" title="导出 JSON 配置文件">
         导出
       </button>
       <button class="btn btn-danger btn-sm" id="btn-clear" style="margin-left: auto;">
@@ -48,7 +59,8 @@
     <button class="tab-btn" data-tab="tab-project">项目经历</button>
     <button class="tab-btn" data-tab="tab-skills">技能荣誉</button>
     <button class="tab-btn" data-tab="tab-pub-comp">论文/赛事</button>
-    <button class="tab-btn" data-tab="tab-ai">AI 优化</button>
+    <button class="tab-btn" data-tab="tab-attachments">附件管理</button>
+    <button class="tab-btn" data-tab="tab-ai">接口与优化</button>
   </div>
 
   <!-- Tabs Content -->
@@ -56,6 +68,19 @@
     
     <!-- Tab 1: Basic Info -->
     <div class="tab-panel active" id="tab-basic">
+      <!-- 简历附件自动上传配置 -->
+      <div class="form-group" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" style="margin-bottom: 0; font-weight: 600; color: #334155;">📎 简历附件 (PDF/Word 自动挂载)</label>
+          <span id="resume-attachment-size" style="font-size: 11px; color: #64748b;">未绑定</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="file" id="resume-attachment-file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" style="display: none;">
+          <button class="btn btn-secondary btn-sm" id="btn-upload-attachment" type="button">上传简历文件</button>
+          <span id="resume-attachment-name" style="font-size: 11.5px; color: #475569; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">未选择文件</span>
+          <button class="btn btn-danger btn-sm" id="btn-remove-attachment" type="button" style="display: none; padding: 3px 8px;">✕ 清除</button>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label">姓名</label>
         <div class="form-input-wrapper">
@@ -218,7 +243,7 @@
       <div class="form-group">
         <label class="form-label">现居地</label>
         <div class="form-input-wrapper">
-          <input type="text" class="form-control" data-key="basic.residence" placeholder="现居城市 + 详细地址，如：北京市海淀区中关村大街1号">
+          <input type="text" class="form-control" data-key="basic.residence" placeholder="现居城市 + 详细地址，如：北京市海淀区中关村南大街1号">
           <div class="field-actions">
             <button class="field-btn btn-copy" data-ref="basic.residence" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
             <button class="field-btn btn-fill-field" data-ref="basic.residence" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
@@ -352,6 +377,15 @@
           </div>
         </div>
       </div>
+
+      <!-- 家庭关系 / 亲属网申记录 -->
+      <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border-color);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">家庭关系 / 亲属记录</span>
+          <button class="btn btn-secondary btn-sm" id="btn-add-family" style="padding: 4px 8px; font-size: 11px;">+ 新增家庭成员</button>
+        </div>
+        <div id="family-list" class="card-list"></div>
+      </div>
     </div>
 
     <!-- Tab 2: Education -->
@@ -453,20 +487,53 @@
       </div>
     </div>
 
+    <!-- Tab: Custom Attachment Manager -->
+    <div class="tab-panel" id="tab-attachments">
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <span class="card-title">自定义附件库</span>
+          <span id="attachments-count" style="font-size:11px; color:#64748b; font-weight:500;">0 项</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:11.5px; color:var(--text-secondary); line-height:1.5; margin-top:0;">
+            为每个附件配置名称、用于识别网申上传框的关键词和本机路径参考。由于浏览器安全限制，完整路径不能直接读取；请在每项中通过“选择文件”手动绑定一次，文件仅保存到当前简历版本的本机扩展存储。
+          </p>
+          <div id="attachments-list"></div>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="btn btn-secondary btn-full" id="btn-add-attachment" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/></svg>
+              添加自定义附件
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-import-attachment-config" type="button" style="white-space:nowrap;">导入配置</button>
+            <input id="attachment-config-file" type="file" accept=".json" style="display:none;">
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tab 6: AI Helper -->
     <div class="tab-panel" id="tab-ai">
       <!-- API Settings Card -->
-      <div class="card" style="border-color: var(--primary-color);">
+      <div class="card">
         <div class="card-header">
-          <span class="card-title" style="color: var(--primary-color);">⚙️ API 接口配置</span>
+          <span class="card-title">API 接口配置</span>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label class="form-label">API 协议</label>
             <select class="form-control" id="ai-protocol">
               <option value="openai">OpenAI 兼容协议 (例如：OpenAI, DeepSeek, OpenRouter, Local)</option>
+              <option value="typesafe">⚡ Jev 决策模型 (OpenRouter / TypeSafe - 推荐)</option>
               <option value="claude">Claude 原生协议</option>
             </select>
+          </div>
+          <div id="typesafe-tip" style="display: none; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 11.5px; color: #3730a3; line-height: 1.5;">
+            💡 <b>Jev (System-One)</b> 是专为表单与工作流决策设计的模型（延迟低至 100ms，0 幻觉）。<br>
+            推荐使用 <b>OpenRouter</b> 接入（自动调用 <code>/api/v1/systemone</code> 网关，填入 <code>sk-or-v1-...</code> 密钥即可）：<br>
+            <div style="margin-top: 5px; display: flex; gap: 6px;">
+              <button type="button" id="btn-preset-openrouter-jev" style="background: #4f46e5; color: #ffffff; border: none; border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer; font-weight: 600;">⚡ 一键填入 OpenRouter 预设</button>
+              <button type="button" id="btn-preset-typesafe-jev" style="background: #ffffff; color: #334155; border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer;">填入 TypeSafe 官方预设</button>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">API 接口地址 (Base URL)</label>
@@ -480,14 +547,18 @@
             <label class="form-label">大模型名称 (Model Name)</label>
             <input type="text" class="form-control" id="ai-model" placeholder="如：gpt-4o-mini 或 deepseek-chat">
           </div>
-          <button class="btn btn-primary btn-sm btn-full" id="btn-save-api-config">保存接口配置</button>
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button class="btn btn-secondary btn-sm" id="btn-test-api-config" type="button" style="flex: 1;">⚡ 测试连接</button>
+            <button class="btn btn-primary btn-sm" id="btn-save-api-config" type="button" style="flex: 1.2;">💾 保存配置</button>
+          </div>
+          <div id="sidepanel-ai-test-result" style="display: none; margin-top: 8px; font-size: 11.5px; padding: 6px 10px; border-radius: 6px; line-height: 1.4;"></div>
         </div>
       </div>
 
       <!-- Resume Optimization Card -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">📝 岗位 JD 简历对齐优化</span>
+          <span class="card-title">岗位 JD 简历对齐优化</span>
         </div>
         <div class="card-body">
           <div class="form-group">
@@ -499,9 +570,55 @@
             <textarea class="form-control" id="ai-custom-prompt" placeholder="例如：请结合此 JD，修改并优化我的【自我评价】和【专业技能】，突出我在 AI Agent / 大模型编排框架方面的落地经验，用专业动词描述。"></textarea>
           </div>
           <button class="btn btn-primary btn-full" id="btn-ai-optimize-resume">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             一键智能对齐优化
           </button>
+        </div>
+      </div>
+
+      <!-- Agent Telemetry & Fill Rate Audit Logs Card -->
+      <div class="card" style="margin-top: 14px;">
+        <div class="card-header">
+          <span class="card-title">📊 智能体执行与填充率审计</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size: 11.5px; color: var(--text-secondary); line-height: 1.45; margin-top: 0; margin-bottom: 10px;">
+            每次自动填充或 Agent 运行后，系统会自动对整页控件、必填项留存、漏填原因及执行轨迹进行深度审计与记录，方便回溯与多 Agent 自动化迭代改进。
+          </p>
+          <div id="agent-log-summary" style="margin: 0 0 10px; padding: 8px 10px; border-radius: 6px; background: #f8fafc; border: 1px solid var(--border-color); color: var(--text-secondary); font-size: 11.5px; line-height: 1.45;">
+            正在读取本机诊断日志状态…
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-agent-logs" type="button" style="white-space: nowrap;">刷新状态</button>
+            <button class="btn btn-secondary btn-full" id="btn-export-agent-logs" type="button">
+              📥 导出审计日志 (JSON)
+            </button>
+            <button class="btn btn-danger btn-sm" id="btn-clear-agent-logs" type="button" style="padding: 6px 10px;">
+              清空
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 求职站点账号密码备忘录 (Password Vault) -->
+      <div class="card" style="margin-top: 14px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="card-title">🔑 求职站点密码备忘录</span>
+          <span id="sidepanel-vault-count" style="font-size: 11px; font-weight: 500; color: #64748b;">0 个站点</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size: 11.5px; color: var(--text-secondary); line-height: 1.45; margin-top: 0; margin-bottom: 10px;">
+            在各大企业招聘官网注册时自动生成的密码均保存在此（纯本地隔离存储，0 外部上报）。在此可集中查看、复制、备份或导出所有站点的账号与密码。
+          </p>
+          <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+            <input type="text" id="sidepanel-vault-search" class="form-control" placeholder="🔍 搜索站点 / 域名 / 账号..." style="flex: 1; height: 30px; font-size: 11.5px;">
+            <button class="btn btn-secondary btn-sm" id="btn-export-passwords" type="button" title="导出所有求职账号密码为 JSON 备份文件">📥 导出备份</button>
+            <button class="btn btn-secondary btn-sm" id="btn-import-passwords" type="button" title="从 JSON 备份恢复密码">📤 导入备份</button>
+            <input type="file" id="sidepanel-pwd-file-input" accept=".json" style="display: none;">
+          </div>
+          <div id="sidepanel-vault-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto;">
+            <div style="text-align: center; padding: 14px; font-size: 11.5px; color: var(--text-muted);">暂无已保存的求职站点密码</div>
+          </div>
         </div>
       </div>
     </div>
@@ -509,6 +626,24 @@
 
   <!-- Toast Notification -->
   <div id="toast" class="toast">操作成功</div>
+
+  <!-- AI 纯文本简历结构化提取弹窗 -->
+  <div id="ai-extract-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div style="background: #ffffff; border-radius: 12px; width: 92%; max-width: 440px; padding: 18px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0;">🪄 AI 纯文本简历一键提取</h3>
+        <button id="btn-close-extract-modal" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #64748b; padding: 2px 6px;">✕</button>
+      </div>
+      <p style="font-size: 11.5px; color: #64748b; margin-top: 0; margin-bottom: 10px; line-height: 1.4;">
+        直接粘贴从 Word、PDF 或招聘网站复制的任意格式简历全文，大模型将自动提取并填入基础信息与多段经历。
+      </p>
+      <textarea id="ai-extract-text" class="form-control" style="width: 100%; height: 180px; font-size: 12px; resize: vertical; margin-bottom: 12px;" placeholder="在此粘贴你的简历全文内容..."></textarea>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-secondary btn-sm" id="btn-cancel-extract" type="button">取消</button>
+        <button class="btn btn-primary btn-sm" id="btn-do-ai-extract" type="button">⚡ 开始智能提取与录入</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Load script -->
   <script src="sidepanel.js"></script>

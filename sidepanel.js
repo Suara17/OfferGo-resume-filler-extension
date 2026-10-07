@@ -1,3 +1,9 @@
+// ==========================================================================
+//  OfferGo - Sidepanel Logic (Auto-generated from src/sidepanel/*.js)
+//  请编辑 src/sidepanel/ 下对应的小模块文件，然后运行 npm run build
+// ==========================================================================
+
+// --- [src/sidepanel/01_state.js] ---
 // 默认数据结构
 const defaultResumeData = {
   basic: {
@@ -26,16 +32,18 @@ const defaultResumeData = {
     extraInfo: "",        // 新增：补充说明
     idCard: "",           // 新增：身份证号
     wechat: "",           // 新增：微信号
-    residence: ""         // 新增：现居地（详细地址）
+    residence: "",        // 新增：现居地（详细地址）
+    resumeAttachment: null, // 简历附件对象: { fileName, dataUrl, mimeType, size }
+    attachments: [] // 用户自定义附件: { id, label, pathHint, keywords, fileName, dataUrl, mimeType, size, updatedAt }
   },
-  education: [], // { school: "", degree: "", major: "", start: "", end: "", gpa: "", supervisor: "", courses: "", researchDirection: "", department: "", labExperience: "", studentId: "", schoolLocation: "" }
+  education: [], // { school, degree, major, start, end, gpa, supervisor, role, roleDescription, ... }
   internship: [], // { company: "", position: "", start: "", end: "", desc: "" }
-  project: [], // { name: "", role: "", start: "", end: "", desc: "", duty: "", result: "", tech: "" }
+  project: [], // { name, link, role, start, end, desc, duty, result, tech }
   competition: [], // 新增：赛事经验
   paper: [], // 新增：论文/期刊
   skills: "",
   languages: "", // 新增：语言能力
-  honors: [], // { name: "", date: "", level: "" }
+  honors: [], // { name, date, level, desc }
   family: []  // { relation: "", name: "", company: "", position: "", phone: "" }
 };
 
@@ -54,12 +62,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   initFormBindings();
   initListActionEvents();
   initSystemActionEvents();
+  if (typeof initSidepanelPasswordVaultEvents === "function") {
+    initSidepanelPasswordVaultEvents();
+  }
 
   // 渲染动态列表
   renderAllLists();
-
-  // 填充 API 接口配置表单
-  fillApiConfigForm();
+  renderAttachmentsList();
+  if (typeof renderSidepanelPasswordVault === "function") {
+    renderSidepanelPasswordVault();
+  }
 
   // 延迟调整所有文本框高度以适配内容
   setTimeout(adjustAllTextareas, 50);
@@ -207,12 +219,80 @@ function fillBasicForm() {
   if (languagesTextarea) {
     languagesTextarea.value = resumeData.languages || "";
   }
+
+  // 渲染简历附件状态
+  const attNameEl = document.getElementById("resume-attachment-name");
+  const attSizeEl = document.getElementById("resume-attachment-size");
+  const removeBtn = document.getElementById("btn-remove-attachment");
+  const att = resumeData.basic && resumeData.basic.resumeAttachment;
+  if (att && att.dataUrl) {
+    if (attNameEl) attNameEl.textContent = att.fileName || "已上传简历附件";
+    const sizeKb = att.size ? Math.round(att.size / 1024) : 0;
+    if (attSizeEl) attSizeEl.textContent = sizeKb > 0 ? `${sizeKb} KB` : "已上传";
+    if (removeBtn) removeBtn.style.display = "inline-flex";
+  } else {
+    if (attNameEl) attNameEl.textContent = "未选择文件";
+    if (attSizeEl) attSizeEl.textContent = "未绑定";
+    if (removeBtn) removeBtn.style.display = "none";
+  }
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[char]));
+}
+
+function formatAttachmentSize(size) {
+  if (!size) return "未绑定文件";
+  return size >= 1024 * 1024 ? `${(size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(size / 1024)} KB`;
+}
+
+function ensureAttachments() {
+  if (!resumeData.basic) resumeData.basic = {};
+  if (!Array.isArray(resumeData.basic.attachments)) resumeData.basic.attachments = [];
+  return resumeData.basic.attachments;
+}
+
+function renderAttachmentsList() {
+  const list = document.getElementById("attachments-list");
+  const count = document.getElementById("attachments-count");
+  if (!list) return;
+  const attachments = ensureAttachments();
+  if (count) count.textContent = `${attachments.length} 项`;
+  if (attachments.length === 0) {
+    list.innerHTML = `<div style="padding: 16px 10px; text-align: center; color: #64748b; font-size: 12px; border: 1px dashed #cbd5e1; border-radius: 8px;">尚未添加附件。添加后填写名称、匹配关键词和本机路径参考，再通过“选择文件”绑定上传文件。</div>`;
+    return;
+  }
+  list.innerHTML = attachments.map((item, index) => {
+    const bound = item.dataUrl ? `已绑定 · ${escapeHtml(formatAttachmentSize(item.size))}` : "未绑定文件";
+    return `<div class="card" style="margin-bottom: 10px; padding: 10px; border: 1px solid #e2e8f0; box-shadow: none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;">
+        <strong style="font-size:12px; color:#334155;">附件 ${index + 1}</strong>
+        <button type="button" class="btn btn-danger btn-sm btn-delete-attachment" data-index="${index}" style="padding:3px 8px;">删除</button>
+      </div>
+      <label class="form-label" style="font-size:11px;">附件名称 <span style="color:#ef4444;">*</span></label>
+      <input class="form-control attachment-input" data-index="${index}" data-key="label" value="${escapeHtml(item.label)}" placeholder="如：研究生成绩单">
+      <label class="form-label" style="font-size:11px; margin-top:7px;">匹配关键词</label>
+      <input class="form-control attachment-input" data-index="${index}" data-key="keywords" value="${escapeHtml(item.keywords)}" placeholder="如：成绩单, transcript, 成绩">
+      <label class="form-label" style="font-size:11px; margin-top:7px;">本机完整路径（仅作参考，不会被扩展自动读取）</label>
+      <input class="form-control attachment-input" data-index="${index}" data-key="pathHint" value="${escapeHtml(item.pathHint)}" placeholder="如：E:\文档\研究生成绩单.pdf">
+      <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+        <input type="file" class="attachment-file-input" data-index="${index}" style="display:none;" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.zip">
+        <button type="button" class="btn btn-secondary btn-sm btn-bind-attachment" data-index="${index}">选择文件</button>
+        <span style="font-size:11px; color:${item.dataUrl ? "#047857" : "#64748b"}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(item.fileName || bound)}</span>
+      </div>
+      <div style="font-size:10.5px; color:#64748b; margin-top:5px;">${item.dataUrl ? `已绑定：${escapeHtml(item.fileName || "文件")}` : "需通过文件选择器绑定后才能自动上传"}</div>
+    </div>`;
+  }).join("");
+}
+
+
+
+// --- [src/sidepanel/02_views.js] ---
 // ==================== UI 渲染与动态绑定 ====================
 
 // 渲染所有动态列表
 function renderAllLists() {
+  renderFamilyList();
   renderEducationList();
   renderInternshipList();
   renderProjectList();
@@ -220,6 +300,128 @@ function renderAllLists() {
   renderCompetitionList();
   renderPaperList();
   adjustAllTextareas();
+}
+
+// 渲染家庭关系列表
+function renderFamilyList() {
+  const container = document.getElementById("family-list");
+  if (!container) return;
+  container.innerHTML = "";
+
+  if (!resumeData.family || resumeData.family.length === 0) {
+    container.innerHTML = `<div class="empty-tip" style="padding:10px;">暂无家庭关系记录，点击上方按钮添加</div>`;
+    return;
+  }
+
+  resumeData.family.forEach((item, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.setAttribute("data-index", index);
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-title">${item.relation || '家庭成员'} #${index + 1}: ${item.name || '未命名'}</span>
+        <div class="card-actions">
+          <button class="btn btn-secondary btn-sm btn-fill-section" data-type="family" data-index="${index}" title="填充本位家庭成员">
+            填充此项
+          </button>
+          <button class="btn btn-danger btn-sm btn-delete-card" data-type="family" data-index="${index}">
+            删除
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">与本人关系</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="relation" value="${item.relation || ''}" placeholder="如：父亲/母亲">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.relation" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.relation" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">亲属姓名</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="name" value="${item.name || ''}" placeholder="亲属姓名">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.name" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.name" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">年龄</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="age" value="${item.age || ''}" placeholder="如：60">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.age" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.age" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">政治面貌</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="political" value="${item.political || ''}" placeholder="群众/党员">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.political" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.political" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">工作单位</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="company" value="${item.company || ''}" placeholder="工作单位/无">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.company" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.company" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">工作部门</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="department" value="${item.department || ''}" placeholder="工作部门/无">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.department" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.department" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">职务/岗位</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="position" value="${item.position || ''}" placeholder="职务/岗位">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.position" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.position" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="family" data-index="${index}" data-key="phone" value="${item.phone || ''}" placeholder="联系电话">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="family.${index}.phone" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="family.${index}.phone" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
 }
 
 // 渲染教育经历列表
@@ -285,7 +487,7 @@ function renderEducationList() {
           <div class="form-group">
             <label class="form-label">学校所在地</label>
             <div class="form-input-wrapper">
-              <input type="text" class="form-control card-input" data-type="education" data-index="${index}" data-key="schoolLocation" value="${item.schoolLocation || ''}" placeholder="如：北京市海淀区">
+              <input type="text" class="form-control card-input" data-type="education" data-index="${index}" data-key="schoolLocation" value="${item.schoolLocation || ''}" placeholder="如：天津市西青区">
               <div class="field-actions">
                 <button class="field-btn btn-copy" data-ref="education.${index}.schoolLocation" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
                 <button class="field-btn btn-fill-field" data-ref="education.${index}.schoolLocation" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
@@ -354,6 +556,26 @@ function renderEducationList() {
             <div class="field-actions">
               <button class="field-btn btn-copy" data-ref="education.${index}.supervisor" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
               <button class="field-btn btn-fill-field" data-ref="education.${index}.supervisor" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">担任职务</label>
+          <div class="form-input-wrapper">
+            <input type="text" class="form-control card-input" data-type="education" data-index="${index}" data-key="role" value="${item.role || ''}" placeholder="如：班长 / 学生会部长 / 社团负责人">
+            <div class="field-actions">
+              <button class="field-btn btn-copy" data-ref="education.${index}.role" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button class="field-btn btn-fill-field" data-ref="education.${index}.role" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">职务描述</label>
+          <div class="form-input-wrapper">
+            <textarea class="form-control card-input" data-type="education" data-index="${index}" data-key="roleDescription" placeholder="说明任职期间负责的工作、组织活动和取得的成果...">${item.roleDescription || ''}</textarea>
+            <div class="field-actions" style="top:8px;">
+              <button class="field-btn btn-copy" data-ref="education.${index}.roleDescription" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button class="field-btn btn-fill-field" data-ref="education.${index}.roleDescription" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
             </div>
           </div>
         </div>
@@ -499,6 +721,77 @@ function renderInternshipList() {
             </div>
           </div>
         </div>
+
+        <!-- 证明人信息补充 (国企/校招/大厂背调必备) -->
+        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+          <span style="font-size: 11.5px; font-weight: 700; color: var(--text-main);">证明人信息</span>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">证明人</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="internship" data-index="${index}" data-key="witness" value="${item.witness || ''}" placeholder="有 / 无">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="internship.${index}.witness" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="internship.${index}.witness" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">证明人姓名</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="internship" data-index="${index}" data-key="witnessName" value="${item.witnessName || ''}" placeholder="证明人姓名">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="internship.${index}.witnessName" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="internship.${index}.witnessName" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">证明人关系</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="internship" data-index="${index}" data-key="witnessRelation" value="${item.witnessRelation || ''}" placeholder="如：直属领导/带教">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="internship.${index}.witnessRelation" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="internship.${index}.witnessRelation" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">证明人职务</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="internship" data-index="${index}" data-key="witnessPosition" value="${item.witnessPosition || ''}" placeholder="如：带教/主管">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="internship.${index}.witnessPosition" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="internship.${index}.witnessPosition" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">证明人单位</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="internship" data-index="${index}" data-key="witnessCompany" value="${item.witnessCompany || ''}" placeholder="证明人所在单位">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="internship.${index}.witnessCompany" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="internship.${index}.witnessCompany" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">证明人联系方式</label>
+            <div class="form-input-wrapper">
+              <input type="text" class="form-control card-input" data-type="internship" data-index="${index}" data-key="witnessPhone" value="${item.witnessPhone || ''}" placeholder="手机号/微信号">
+              <div class="field-actions">
+                <button class="field-btn btn-copy" data-ref="internship.${index}.witnessPhone" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="field-btn btn-fill-field" data-ref="internship.${index}.witnessPhone" title="填充"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
     container.appendChild(card);
@@ -583,6 +876,16 @@ function renderProjectList() {
             <div class="field-actions">
               <button class="field-btn btn-copy" data-ref="project.${index}.tech" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
               <button class="field-btn btn-fill-field" data-ref="project.${index}.tech" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">项目链接</label>
+          <div class="form-input-wrapper">
+            <input type="url" class="form-control card-input" data-type="project" data-index="${index}" data-key="link" value="${item.link || ''}" placeholder="如：GitHub 地址 / 在线演示地址">
+            <div class="field-actions">
+              <button class="field-btn btn-copy" data-ref="project.${index}.link" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button class="field-btn btn-fill-field" data-ref="project.${index}.link" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
             </div>
           </div>
         </div>
@@ -684,12 +987,25 @@ function renderHonorsList() {
             </div>
           </div>
         </div>
+        <div class="form-group">
+          <label class="form-label">奖项描述</label>
+          <div class="form-input-wrapper">
+            <textarea class="form-control card-input" data-type="honors" data-index="${index}" data-key="desc" placeholder="简述获奖背景、奖项内容、个人贡献或排名...">${item.desc || ''}</textarea>
+            <div class="field-actions" style="top:8px;">
+              <button class="field-btn btn-copy" data-ref="honors.${index}.desc" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button class="field-btn btn-fill-field" data-ref="honors.${index}.desc" title="填充到当前焦点输入框"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
     container.appendChild(card);
   });
 }
 
+
+
+// --- [src/sidepanel/03_events.js] ---
 // ==================== 事件初始化 ====================
 
 // 初始化选项卡切换事件
@@ -854,13 +1170,35 @@ function initFormBindings() {
       });
     }
   });
+
+  // 启用字段拖拽即填 (HTML5 Drag & Drop)
+  document.addEventListener("dragstart", (e) => {
+    const input = e.target.closest(".form-control, .btn-fill-field, .card-input");
+    if (!input) return;
+    let val = "";
+    let lbl = "";
+    if (input.tagName === "INPUT" || input.tagName === "TEXTAREA") {
+      val = input.value || "";
+      const group = input.closest(".form-group");
+      lbl = (group && group.querySelector(".form-label") ? group.querySelector(".form-label").textContent : "").trim();
+    } else if (input.classList.contains("btn-fill-field")) {
+      const ref = input.getAttribute("data-ref");
+      val = getValueByRef(ref);
+      lbl = ref;
+    }
+    if (val) {
+      e.dataTransfer.setData("application/x-resume-field", JSON.stringify({ label: lbl, value: val }));
+      e.dataTransfer.setData("text/plain", val);
+      e.dataTransfer.effectAllowed = "copy";
+    }
+  });
 }
 
 // 初始化列表操作事件 (添加 / 删除)
 function initListActionEvents() {
   // 添加教育背景
   document.getElementById("btn-add-education").addEventListener("click", () => {
-    resumeData.education.push({ school: "", degree: "", major: "", start: "", end: "", gpa: "", supervisor: "", majorDescription: "", thesisTopic: "", courses: "", researchDirection: "", department: "", labExperience: "", studentId: "", schoolLocation: "" });
+    resumeData.education.push({ school: "", degree: "", major: "", start: "", end: "", gpa: "", supervisor: "", role: "", roleDescription: "", majorDescription: "", thesisTopic: "", courses: "", researchDirection: "", department: "", labExperience: "", studentId: "", schoolLocation: "" });
     saveToStorage();
     renderEducationList();
     showToast("已新增一段教育经历");
@@ -868,15 +1206,45 @@ function initListActionEvents() {
 
   // 添加工作实习
   document.getElementById("btn-add-internship").addEventListener("click", () => {
-    resumeData.internship.push({ company: "", position: "", start: "", end: "", desc: "" });
+    resumeData.internship.push({
+      company: "",
+      position: "",
+      start: "",
+      end: "",
+      desc: "",
+      witness: "有",
+      witnessName: "",
+      witnessRelation: "",
+      witnessPosition: "",
+      witnessCompany: "",
+      witnessPhone: ""
+    });
     saveToStorage();
     renderInternshipList();
     showToast("已新增一段工作实习经历");
   });
 
+  // 添加家庭成员
+  document.getElementById("btn-add-family")?.addEventListener("click", () => {
+    if (!resumeData.family) resumeData.family = [];
+    resumeData.family.push({
+      relation: "",
+      name: "",
+      age: "",
+      political: "",
+      company: "",
+      department: "",
+      position: "",
+      phone: ""
+    });
+    saveToStorage();
+    renderFamilyList();
+    showToast("已新增家庭成员记录");
+  });
+
   // 添加项目经历
   document.getElementById("btn-add-project").addEventListener("click", () => {
-    resumeData.project.push({ name: "", role: "", start: "", end: "", desc: "", duty: "", result: "", tech: "" });
+    resumeData.project.push({ name: "", link: "", role: "", start: "", end: "", desc: "", duty: "", result: "", tech: "" });
     saveToStorage();
     renderProjectList();
     showToast("已新增一段项目经历");
@@ -884,7 +1252,7 @@ function initListActionEvents() {
 
   // 添加荣誉奖项
   document.getElementById("btn-add-honor").addEventListener("click", () => {
-    resumeData.honors.push({ name: "", date: "", level: "" });
+    resumeData.honors.push({ name: "", date: "", level: "", desc: "" });
     saveToStorage();
     renderHonorsList();
     showToast("已新增一段荣誉奖项");
@@ -922,6 +1290,7 @@ function initListActionEvents() {
         if (type === "honors") renderHonorsList();
         if (type === "competition") renderCompetitionList();
         if (type === "paper") renderPaperList();
+        if (type === "family") renderFamilyList();
         showToast("已删除对应内容");
       }
     }
@@ -930,12 +1299,30 @@ function initListActionEvents() {
 
 // 初始化系统操作事件 (导入/导出/清空/一键填充等)
 function initSystemActionEvents() {
-  // 一键智能填充整页
-  document.getElementById("btn-smart-fill").addEventListener("click", async () => {
-    await sendMsgToContentScript({
-      action: "smartFillPage",
-      data: resumeData
-    });
+  // 启动 Zero-PII 符号化 Agent 代填 (支持多经历卡片扩增与搜索下拉框求解)
+  document.getElementById("btn-agent-autofill")?.addEventListener("click", async () => {
+    showToast("🤖 正在启动网申 Agent，开启安全隔离代填...");
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab) {
+        showToast("未找到活动网页标签");
+        return;
+      }
+      chrome.runtime.sendMessage({
+        action: "startAgentAutofill",
+        tabId: tab.id,
+        resumeData
+      }, (res) => {
+        if (chrome.runtime.lastError || (res && !res.success)) {
+          const err = chrome.runtime.lastError?.message || res?.error || "执行异常";
+          showToast(`Agent 提示: ${err}`);
+        } else {
+          showToast("✓ Agent 任务已启动，请在网页端查看即时进度");
+        }
+      });
+    } catch (err) {
+      showToast("启动异常：" + err.message);
+    }
   });
 
   // 单字段“填充”按钮逻辑
@@ -1032,6 +1419,266 @@ function initSystemActionEvents() {
     e.target.value = ""; // 重置 input
   });
 
+  // 简历附件上传与清除逻辑
+  document.getElementById("btn-upload-attachment")?.addEventListener("click", () => {
+    document.getElementById("resume-attachment-file")?.click();
+  });
+
+  document.getElementById("resume-attachment-file")?.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("简历附件大小不能超过 5MB");
+      e.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (!resumeData.basic) resumeData.basic = {};
+      resumeData.basic.resumeAttachment = {
+        fileName: file.name,
+        mimeType: file.type || "application/pdf",
+        dataUrl: event.target.result,
+        size: file.size
+      };
+      saveToStorage();
+      fillBasicForm();
+      showToast(`✓ 已成功绑定简历附件：${file.name}`);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  });
+
+  document.getElementById("btn-remove-attachment")?.addEventListener("click", () => {
+    if (resumeData.basic) resumeData.basic.resumeAttachment = null;
+    saveToStorage();
+    fillBasicForm();
+    showToast("已清除简历附件");
+  });
+
+  // 自定义附件库：路径只作为用户参考；实际上传文件必须由用户通过 file picker 显式绑定。
+  document.getElementById("btn-import-attachment-config")?.addEventListener("click", () => {
+    document.getElementById("attachment-config-file")?.click();
+  });
+  document.getElementById("attachment-config-file")?.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const imported = JSON.parse(reader.result);
+        const items = Array.isArray(imported) ? imported : imported.attachments;
+        if (!Array.isArray(items)) throw new Error("附件配置必须是数组或包含 attachments 数组");
+        const normalized = items.map((item, index) => ({
+          id: `attachment_${Date.now()}_${index}`,
+          label: String(item.label || item.name || "").trim(),
+          keywords: String(item.keywords || "").trim(),
+          pathHint: String(item.pathHint || item.path || "").trim(),
+          fileName: "", dataUrl: "", mimeType: "", size: 0, updatedAt: ""
+        })).filter(item => item.label || item.pathHint);
+        resumeData.basic.attachments = normalized;
+        saveToStorage();
+        renderAttachmentsList();
+        showToast(`已导入 ${normalized.length} 条附件配置；请逐项选择文件绑定`);
+      } catch (error) {
+        showToast("附件配置导入失败：" + error.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  });
+  document.getElementById("btn-add-attachment")?.addEventListener("click", () => {
+    ensureAttachments().push({ id: `attachment_${Date.now()}`, label: "", keywords: "", pathHint: "", fileName: "", dataUrl: "", mimeType: "", size: 0, updatedAt: "" });
+    saveToStorage();
+    renderAttachmentsList();
+  });
+
+  document.addEventListener("input", (event) => {
+    const input = event.target.closest(".attachment-input");
+    if (!input) return;
+    const index = Number.parseInt(input.dataset.index, 10);
+    const key = input.dataset.key;
+    const item = ensureAttachments()[index];
+    if (!item || !key) return;
+    item[key] = input.value;
+    saveToStorage();
+  });
+
+  document.addEventListener("click", (event) => {
+    const bindButton = event.target.closest(".btn-bind-attachment");
+    if (bindButton) {
+      const input = document.querySelector(`.attachment-file-input[data-index="${bindButton.dataset.index}"]`);
+      input?.click();
+      return;
+    }
+    const deleteButton = event.target.closest(".btn-delete-attachment");
+    if (deleteButton) {
+      const index = Number.parseInt(deleteButton.dataset.index, 10);
+      ensureAttachments().splice(index, 1);
+      saveToStorage();
+      renderAttachmentsList();
+      showToast("已删除附件配置");
+    }
+  });
+
+  document.addEventListener("change", (event) => {
+    const input = event.target.closest(".attachment-file-input");
+    if (!input) return;
+    const index = Number.parseInt(input.dataset.index, 10);
+    const file = input.files?.[0];
+    const item = ensureAttachments()[index];
+    if (!file || !item) return;
+    if (file.size > 8 * 1024 * 1024) {
+      showToast("单个附件不能超过 8MB");
+      input.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      item.fileName = file.name;
+      item.mimeType = file.type || "application/octet-stream";
+      item.dataUrl = reader.result;
+      item.size = file.size;
+      item.updatedAt = new Date().toISOString();
+      if (!item.pathHint) item.pathHint = `已从文件选择器绑定：${file.name}`;
+      saveToStorage();
+      renderAttachmentsList();
+      showToast(`已绑定附件：${file.name}`);
+    };
+    reader.readAsDataURL(file);
+    input.value = "";
+  });
+  // 读取本机持久化状态：日志默认只存在插件 storage；可选启动本地监听器额外落盘。
+  const renderAgentLogDiagnostics = () => {
+    const summary = document.getElementById("agent-log-summary");
+    if (!summary) return;
+    summary.textContent = "正在读取本机诊断日志状态…";
+    const render = (diagnostics) => {
+      const latest = diagnostics?.latestSession;
+      const count = diagnostics?.storedEntries ?? 0;
+      const max = diagnostics?.retentionLimit ?? 300;
+      if (!latest) {
+        summary.textContent = `本机已保存 ${count}/${max} 条结构化日志；尚无完整 Agent 会话。完成一次 Agent 代填后可导出复盘。`;
+        return;
+      }
+      const metrics = latest.coverageAudit?.metrics;
+      const duration = Number.isFinite(latest.durationMs) ? `，耗时 ${(latest.durationMs / 1000).toFixed(1)} 秒` : "";
+      const rate = metrics ? `，填充率 ${metrics.fillRatePercent}%` : "";
+      summary.textContent = `本机已保存 ${count}/${max} 条日志。最近会话：${latest.sessionSummary?.totalStepsExecuted || 0} 步${duration}${rate}；终止原因：${latest.terminationReason || "未知"}。`;
+    };
+    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage({ action: "getAgentLogDiagnostics" }, (res) => {
+        if (chrome.runtime.lastError || !res?.success) {
+          summary.textContent = "诊断状态读取失败；仍可直接导出插件本地日志。";
+          return;
+        }
+        render(res.diagnostics);
+      });
+      return;
+    }
+    if (typeof chrome !== "undefined" && chrome.storage?.local) {
+      chrome.storage.local.get("rf_agent_debug_logs", (res) => render({ storedEntries: (res.rf_agent_debug_logs || []).length, retentionLimit: 300 }));
+    }
+  };
+  document.getElementById("btn-refresh-agent-logs")?.addEventListener("click", renderAgentLogDiagnostics);
+  renderAgentLogDiagnostics();
+  // 导出 Agent 诊断与填充率审计日志 (供其他 Agent 分析改进)
+  document.getElementById("btn-export-agent-logs")?.addEventListener("click", () => {
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get("rf_agent_debug_logs", (res) => {
+        const logs = res.rf_agent_debug_logs || [];
+        if (logs.length === 0) {
+          showToast("暂无已记录的审计日志，请先在网申页面运行一次填充");
+          return;
+        }
+        const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `agent_audit_logs_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`✓ 已导出 ${logs.length} 条审计与轨迹日志！`);
+        renderAgentLogDiagnostics();
+      });
+    } else {
+      showToast("请在 Chrome 插件环境中导出");
+    }
+  });
+
+  document.getElementById("btn-clear-agent-logs")?.addEventListener("click", () => {
+    if (confirm("确定要清空后台已记录的 Agent 诊断审计日志吗？")) {
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.remove("rf_agent_debug_logs", () => {
+          showToast("已清空审计日志");
+          renderAgentLogDiagnostics();
+        });
+      }
+    }
+  });
+  // AI 纯文本简历一键提取逻辑
+  const extractModal = document.getElementById("ai-extract-modal");
+  document.getElementById("btn-ai-extract")?.addEventListener("click", () => {
+    if (extractModal) extractModal.style.display = "flex";
+  });
+  document.getElementById("btn-close-extract-modal")?.addEventListener("click", () => {
+    if (extractModal) extractModal.style.display = "none";
+  });
+  document.getElementById("btn-cancel-extract")?.addEventListener("click", () => {
+    if (extractModal) extractModal.style.display = "none";
+  });
+
+  document.getElementById("btn-do-ai-extract")?.addEventListener("click", async () => {
+    const text = document.getElementById("ai-extract-text")?.value.trim();
+    if (!text) {
+      showToast("请先粘贴你的简历文本内容");
+      return;
+    }
+
+    const btn = document.getElementById("btn-do-ai-extract");
+    btn.disabled = true;
+    btn.textContent = "AI 正在结构化提取中...";
+
+    try {
+      const systemPrompt = `你是一个专业的求职简历数据结构化提取专家。
+请将用户提供的原始简历文本，精准提取并填入到以下标准求职简历 JSON 模板中。
+必须严格直接返回纯 JSON 格式，严禁输出任何额外废话、Markdown 代码块反引号。缺失字段保持空字符串 "" 或空数组 []。
+【目标 JSON 结构标准】:
+${JSON.stringify(defaultResumeData, null, 2)}`;
+
+      const responseText = await callLLM(text, systemPrompt);
+      let cleaned = responseText.trim();
+      if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```[a-zA-Z]*\n/, "").replace(/\n```$/, "");
+      }
+
+      let parsed = null;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        const m = cleaned.match(/\{[\s\S]*\}/);
+        if (m) parsed = JSON.parse(m[0]);
+        else throw new Error("大模型返回格式不是合法 JSON");
+      }
+
+      if (parsed && typeof parsed === "object") {
+        resumeData = mergeWithDefault(parsed, defaultResumeData);
+        saveToStorage();
+        fillBasicForm();
+        renderAllLists();
+        if (extractModal) extractModal.style.display = "none";
+        const textarea = document.getElementById("ai-extract-text");
+        if (textarea) textarea.value = "";
+        showToast("🎉 简历结构化提取完成！已自动填入当前版本！");
+      }
+    } catch (err) {
+      showToast("AI 提取失败：" + err.message);
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "⚡ 开始智能提取与录入";
+    }
+  });
   // 清空数据
   document.getElementById("btn-clear").addEventListener("click", () => {
     if (confirm("确定要清空所有已保存的简历数据吗？此操作无法恢复！")) {
@@ -1045,12 +1692,113 @@ function initSystemActionEvents() {
 
   // 保存 API 接口配置
   document.getElementById("btn-save-api-config").addEventListener("click", () => {
+    const rawKey = document.getElementById("ai-api-key").value.trim();
+    const cleanKey = rawKey.replace(/^Bearer\s+/i, "").replace(/^["']|["']$/g, "").trim();
     apiConfig.protocol = document.getElementById("ai-protocol").value;
     apiConfig.baseUrl = document.getElementById("ai-base-url").value.trim();
-    apiConfig.apiKey = document.getElementById("ai-api-key").value.trim();
+    apiConfig.apiKey = cleanKey;
     apiConfig.model = document.getElementById("ai-model").value.trim();
 
     saveApiConfig();
+  });
+
+  // 测试 API 接口配置连通性
+  document.getElementById("btn-test-api-config")?.addEventListener("click", async () => {
+    const protocol = document.getElementById("ai-protocol")?.value || "openai";
+    const baseUrl = document.getElementById("ai-base-url")?.value.trim() || "";
+    const rawKey = document.getElementById("ai-api-key")?.value.trim() || "";
+    const apiKey = rawKey.replace(/^Bearer\s+/i, "").replace(/^["']|["']$/g, "").trim();
+    const model = document.getElementById("ai-model")?.value.trim() || "";
+    const testResultEl = document.getElementById("sidepanel-ai-test-result");
+    const testBtn = document.getElementById("btn-test-api-config");
+
+    if (!apiKey) {
+      showToast("请先输入 API Key！");
+      if (testResultEl) {
+        testResultEl.style.display = "block";
+        testResultEl.style.background = "#fee2e2";
+        testResultEl.style.color = "#991b1b";
+        testResultEl.textContent = "❌ 请先填写 API Key！";
+      }
+      return;
+    }
+
+    const testCfg = { protocol, baseUrl, apiKey, model };
+    apiConfig = testCfg;
+    saveApiConfig();
+
+    if (testBtn) {
+      testBtn.disabled = true;
+      testBtn.textContent = "正在测试...";
+    }
+    if (testResultEl) {
+      testResultEl.style.display = "block";
+      testResultEl.style.background = "#f1f5f9";
+      testResultEl.style.color = "#475569";
+      testResultEl.textContent = "⏳ 正在向大模型接口发送握手测试...";
+    }
+    showToast("⚡ 正在向接口发送测试握手...");
+
+    try {
+      const resp = await new Promise((resolve) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            resolve({ success: false, error: "连接测试超时 (15s)，请检查网络或代理" });
+          }
+        }, 15000);
+
+        chrome.runtime.sendMessage({
+          action: "callLLM",
+          payload: {
+            prompt: "Hello, this is a connectivity test. Reply with 'pong' directly.",
+            systemPrompt: "You are a test ping bot.",
+            jsonMode: false,
+            apiConfig: testCfg,
+            meta: { action: "test_ping" }
+          }
+        }, (res) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve(res);
+          }
+        });
+      });
+
+      if (resp && resp.success) {
+        if (testResultEl) {
+          testResultEl.style.display = "block";
+          testResultEl.style.background = "#dcfce7";
+          testResultEl.style.color = "#166534";
+          testResultEl.textContent = `✓ 握手成功！回复: ${String(resp.data).slice(0, 70)}`;
+        }
+        showToast("✓ 接口连接测试成功！");
+      } else {
+        const err = (resp && resp.error) || "未知错误";
+        if (testResultEl) {
+          testResultEl.style.display = "block";
+          testResultEl.style.background = "#fee2e2";
+          testResultEl.style.color = "#991b1b";
+          testResultEl.textContent = `❌ 测试失败: ${err}`;
+        }
+        showToast(`测试失败: ${err}`);
+      }
+    } catch (err) {
+      if (testResultEl) {
+        testResultEl.style.display = "block";
+        testResultEl.style.background = "#fee2e2";
+        testResultEl.style.color = "#991b1b";
+        testResultEl.textContent = `❌ 异常: ${err.message}`;
+      }
+      showToast(`测试异常: ${err.message}`);
+    } finally {
+      if (testBtn) {
+        testBtn.disabled = false;
+        testBtn.textContent = "⚡ 测试连接";
+      }
+    }
   });
 
   // 一键对齐优化按钮点击
@@ -1183,9 +1931,12 @@ function initSystemActionEvents() {
   });
 }
 
+
+
+// --- [src/sidepanel/04_communication.js] ---
 // ==================== 跨脚本通信 ====================
 
-// 向当前标签页的 content.js 发送消息
+// 向当前标签页的所有 Frame (主页面 + 嵌套 iframe) 广播发送消息
 async function sendMsgToContentScript(msg) {
   if (typeof chrome === 'undefined' || !chrome.tabs) {
     showToast("当前环境不支持与网页通信，请在网页中以插件形式运行");
@@ -1198,31 +1949,44 @@ async function sendMsgToContentScript(msg) {
       showToast("未找到活动网页标签");
       return;
     }
-    
-    // 发送消息
-    chrome.tabs.sendMessage(tab.id, msg, (response) => {
-      // 检查错误
-      if (chrome.runtime.lastError) {
-        showToast("请先刷新网页，再进行填充操作");
-        console.warn("Communication error:", chrome.runtime.lastError.message);
+
+    // 优先通过 background 广播给当前页面的所有 frames (支持穿透 iframe)
+    chrome.runtime.sendMessage({
+      action: "broadcastToTabFrames",
+      tabId: tab.id,
+      payload: msg
+    }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        // 降级使用基础 tabs.sendMessage
+        chrome.tabs.sendMessage(tab.id, msg, (fallbackRes) => {
+          if (chrome.runtime.lastError) {
+            showToast("请先刷新网页，再进行填充操作");
+            return;
+          }
+          handleFillResponse(fallbackRes);
+        });
         return;
       }
-      
-      if (response && response.status === "success") {
-        if (response.count !== undefined) {
-          showToast(`成功填充了 ${response.count} 个字段`);
-        } else {
-          showToast("填充成功");
-        }
-      } else if (response && response.status === "no_focus") {
-        showToast("请先在网页上点击一个输入框以指定位置");
-      } else {
-        showToast("填充未起效，请重试");
-      }
+
+      handleFillResponse(response);
     });
   } catch (err) {
     showToast("通信异常，请刷新页面重试");
     console.error(err);
+  }
+}
+
+function handleFillResponse(response) {
+  if (response && response.status === "success") {
+    if (typeof response.count === "number" && response.count > 0) {
+      showToast(`成功填充了 ${response.count} 个字段`);
+    } else {
+      showToast("填充成功");
+    }
+  } else if (response && response.status === "no_focus") {
+    showToast("请先在网页或子框架中点击一个输入框以指定位置");
+  } else {
+    showToast("未检测到匹配的可填充输入框");
   }
 }
 
@@ -1253,6 +2017,9 @@ function adjustAllTextareas() {
   });
 }
 
+
+
+// --- [src/sidepanel/05_ai_assistant.js] ---
 // ==================== 第三方大模型 API 配置与调用 ====================
 let apiConfig = {
   protocol: "openai",
@@ -1297,13 +2064,63 @@ function fillApiConfigForm() {
   const baseUrlEl = document.getElementById("ai-base-url");
   const apiKeyEl = document.getElementById("ai-api-key");
   const modelEl = document.getElementById("ai-model");
+  const typesafeTip = document.getElementById("typesafe-tip");
   
   if (protocolEl) protocolEl.value = apiConfig.protocol || "openai";
   if (baseUrlEl) baseUrlEl.value = apiConfig.baseUrl || "https://api.openai.com/v1";
   if (apiKeyEl) apiKeyEl.value = apiConfig.apiKey || "";
   if (modelEl) modelEl.value = apiConfig.model || "gpt-4o-mini";
-}
+  if (typesafeTip) typesafeTip.style.display = (apiConfig.protocol === "typesafe") ? "block" : "none";
 
+  if (protocolEl && !protocolEl.hasAttribute("data-bound-change")) {
+    protocolEl.setAttribute("data-bound-change", "true");
+    protocolEl.addEventListener("change", () => {
+      const p = protocolEl.value;
+      if (typesafeTip) typesafeTip.style.display = (p === "typesafe") ? "block" : "none";
+      if (p === "typesafe") {
+        if (baseUrlEl && (!baseUrlEl.value || baseUrlEl.value.includes("openai.com") || baseUrlEl.value.includes("anthropic.com"))) {
+          baseUrlEl.value = "https://openrouter.ai/api/v1";
+        }
+        if (modelEl && (!modelEl.value || modelEl.value.includes("gpt") || modelEl.value.includes("claude"))) {
+          modelEl.value = "typesafe/jev-1.13";
+        }
+        if (apiKeyEl && !apiKeyEl.value) apiKeyEl.placeholder = "填入 OpenRouter 密钥 (sk-or-v1-...) 或 TypeSafe Key";
+      } else if (p === "openai") {
+        if (baseUrlEl && (baseUrlEl.value.includes("typesafe.ai") || baseUrlEl.value.includes("openrouter.ai"))) {
+          baseUrlEl.value = "https://api.openai.com/v1";
+        }
+        if (modelEl && modelEl.value.includes("jev")) {
+          modelEl.value = "gpt-4o-mini";
+        }
+        if (apiKeyEl) apiKeyEl.placeholder = "输入你的 API Key";
+      } else if (p === "claude") {
+        if (baseUrlEl && (baseUrlEl.value.includes("typesafe.ai") || baseUrlEl.value.includes("openai.com") || baseUrlEl.value.includes("openrouter.ai"))) {
+          baseUrlEl.value = "https://api.anthropic.com/v1";
+        }
+        if (modelEl && (modelEl.value.includes("jev") || modelEl.value.includes("gpt"))) {
+          modelEl.value = "claude-3-5-sonnet-20241022";
+        }
+        if (apiKeyEl) apiKeyEl.placeholder = "输入你的 Claude API Key";
+      }
+    });
+
+    document.getElementById("btn-preset-openrouter-jev")?.addEventListener("click", () => {
+      if (protocolEl) protocolEl.value = "typesafe";
+      if (baseUrlEl) baseUrlEl.value = "https://openrouter.ai/api/v1";
+      if (modelEl) modelEl.value = "typesafe/jev-1.13";
+      if (apiKeyEl && !apiKeyEl.value) apiKeyEl.placeholder = "填入 OpenRouter 密钥 (sk-or-v1-...)";
+      showToast("✓ 已填入 OpenRouter Jev 预设，输入 Key 后点击保存");
+    });
+
+    document.getElementById("btn-preset-typesafe-jev")?.addEventListener("click", () => {
+      if (protocolEl) protocolEl.value = "typesafe";
+      if (baseUrlEl) baseUrlEl.value = "https://api.typesafe.ai/v1";
+      if (modelEl) modelEl.value = "jev-latest";
+      if (apiKeyEl && !apiKeyEl.value) apiKeyEl.placeholder = "填入 TypeSafe 官方 Key";
+      showToast("✓ 已填入 TypeSafe 官方预设");
+    });
+  }
+}
 // 统一的 LLM 调用接口，支持 OpenAI 和 Claude 原生协议
 async function callLLM(prompt, systemPrompt = "") {
   if (!apiConfig.apiKey) {
@@ -1594,6 +2411,205 @@ function renderPaperList() {
     `;
     container.appendChild(card);
   });
+}
+
+
+
+// --- [src/sidepanel/06_password_vault.js] ---
+// ==================== 求职站点账号密码备忘录 (Password Vault) ====================
+let sidepanelSavedPasswords = [];
+
+async function loadSidepanelSavedPasswords() {
+  return new Promise((resolve) => {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get("rf_saved_passwords", (result) => {
+        sidepanelSavedPasswords = Array.isArray(result?.rf_saved_passwords) ? result.rf_saved_passwords : [];
+        resolve(sidepanelSavedPasswords);
+      });
+    } else {
+      try {
+        sidepanelSavedPasswords = JSON.parse(localStorage.getItem("rf_saved_passwords") || "[]");
+      } catch (_) {
+        sidepanelSavedPasswords = [];
+      }
+      resolve(sidepanelSavedPasswords);
+    }
+  });
+}
+
+async function saveSidepanelSavedPasswords(list) {
+  sidepanelSavedPasswords = list;
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    await chrome.storage.local.set({ rf_saved_passwords: list });
+  } else {
+    localStorage.setItem("rf_saved_passwords", JSON.stringify(list));
+  }
+  renderSidepanelPasswordVault();
+}
+
+async function renderSidepanelPasswordVault(filterQuery = "") {
+  await loadSidepanelSavedPasswords();
+  const countEl = document.getElementById("sidepanel-vault-count");
+  if (countEl) countEl.textContent = `${sidepanelSavedPasswords.length} 个站点`;
+
+  const container = document.getElementById("sidepanel-vault-list");
+  if (!container) return;
+
+  const query = (filterQuery || "").toLowerCase().trim();
+  const filtered = sidepanelSavedPasswords.filter((p) => {
+    if (!query) return true;
+    return (p.siteName || "").toLowerCase().includes(query) ||
+           (p.domain || "").toLowerCase().includes(query) ||
+           (p.account || "").toLowerCase().includes(query);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align: center; padding: 16px 10px; font-size: 11.5px; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 8px;">暂无已保存的求职站点密码（可在悬浮卡片 🔑 密码生成器中为网申站点一键保存）。</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map((item) => {
+    return `
+      <div class="card" style="padding: 10px; border: 1px solid #e2e8f0; box-shadow: none; margin-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <strong style="font-size: 12px; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">🌐 ${escapeHtml(item.siteName || item.domain)}</strong>
+          <span style="font-size: 10.5px; color: #64748b;">${escapeHtml(item.domain)}</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #f1f5f9; margin-bottom: 8px;">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="color: #475569;">账号: <b style="color: #0f172a;">${escapeHtml(item.account || '未填写')}</b></span>
+            <span style="color: #64748b; font-size: 10px;">更新: ${escapeHtml(item.updatedAt || '未知')}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="sidepanel-pwd-val" data-id="${item.id}" style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; color: #4338ca;">••••••••</span>
+            <button type="button" class="btn-toggle-sidepanel-pwd" data-id="${item.id}" style="background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 2px;">👁️</button>
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button type="button" class="btn btn-secondary btn-sm btn-copy-sp-acc" data-account="${escapeHtml(item.account || '')}" style="flex: 1; font-size: 11px;">📋 复制账号</button>
+          <button type="button" class="btn btn-secondary btn-sm btn-copy-sp-pwd" data-id="${item.id}" style="flex: 1; font-size: 11px;">🔑 复制密码</button>
+          <button type="button" class="btn btn-danger btn-sm btn-del-sp-pwd" data-id="${item.id}" style="padding: 4px 8px; font-size: 11px;" title="删除此记录">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // 绑定事件
+  container.querySelectorAll(".btn-toggle-sidepanel-pwd").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      const target = sidepanelSavedPasswords.find((p) => p.id === id);
+      const span = container.querySelector(`.sidepanel-pwd-val[data-id="${id}"]`);
+      if (target && span) {
+        const isMasked = span.textContent.includes("•");
+        span.textContent = isMasked ? target.password : "••••••••";
+        btn.textContent = isMasked ? "🙈" : "👁️";
+      }
+    });
+  });
+
+  container.querySelectorAll(".btn-copy-sp-acc").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const acc = btn.getAttribute("data-account");
+      if (!acc) {
+        showToast("该站点未记录账号");
+        return;
+      }
+      await navigator.clipboard.writeText(acc);
+      showToast(`已复制账号：${acc}`);
+    });
+  });
+
+  container.querySelectorAll(".btn-copy-sp-pwd").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-id");
+      const target = sidepanelSavedPasswords.find((p) => p.id === id);
+      if (target && target.password) {
+        await navigator.clipboard.writeText(target.password);
+        showToast(`已复制「${target.siteName || target.domain}」密码`);
+      }
+    });
+  });
+
+  container.querySelectorAll(".btn-del-sp-pwd").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-id");
+      const target = sidepanelSavedPasswords.find((p) => p.id === id);
+      if (target && confirm(`确定删除「${target.siteName || target.domain}」的密码备忘吗？`)) {
+        const next = sidepanelSavedPasswords.filter((p) => p.id !== id);
+        await saveSidepanelSavedPasswords(next);
+        showToast("已删除对应密码备忘");
+      }
+    });
+  });
+}
+
+function initSidepanelPasswordVaultEvents() {
+  const searchInput = document.getElementById("sidepanel-vault-search");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      renderSidepanelPasswordVault(e.target.value);
+    });
+  }
+
+  const exportBtn = document.getElementById("btn-export-passwords");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", () => {
+      if (sidepanelSavedPasswords.length === 0) {
+        showToast("暂无可导出的密码记录");
+        return;
+      }
+      const blob = new Blob([JSON.stringify(sidepanelSavedPasswords, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `offergo_passwords_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("已导出全部求职站点密码备份");
+    });
+  }
+
+  const importBtn = document.getElementById("btn-import-passwords");
+  const fileInput = document.getElementById("sidepanel-pwd-file-input");
+  if (importBtn && fileInput) {
+    importBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (Array.isArray(parsed)) {
+            const map = new Map();
+            sidepanelSavedPasswords.forEach((p) => map.set(p.domain, p));
+            parsed.forEach((p) => {
+              if (p && p.domain && p.password) map.set(p.domain, p);
+            });
+            const merged = Array.from(map.values());
+            await saveSidepanelSavedPasswords(merged);
+            showToast(`成功导入 ${parsed.length} 条站点密码！`);
+          } else {
+            showToast("导入失败：文件格式不符合规范");
+          }
+        } catch (_) {
+          showToast("导入失败：JSON 文件解析错误");
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    });
+  }
+
+  // 监听 Storage 变更（当在悬浮面板保存了新密码时，侧边栏自动同步）
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes.rf_saved_passwords) {
+        renderSidepanelPasswordVault();
+      }
+    });
+  }
 }
 
 
