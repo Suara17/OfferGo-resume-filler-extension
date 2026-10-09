@@ -1133,7 +1133,99 @@
       word-break: break-all;
     }
     .rf-pwd-status.ok { background: var(--success-light); color: #047857; }
-    .rf-pwd-status.warn { background: #fffbeb; color: #b45309; }
+    /* 左侧分块快速导航布局 */
+    .rf-tab-panel.active {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 10px;
+      min-height: 100%;
+    }
+    .rf-section-nav {
+      flex: 0 0 104px;
+      width: 104px;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 4px 3px;
+      max-height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+      border-right: 1px solid #e2e8f0;
+    }
+    .rf-section-nav::-webkit-scrollbar { display: none; }
+    .rf-section-nav-item {
+      width: 100%;
+      min-height: 29px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 6px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: #64748b;
+      font-size: 10.5px;
+      line-height: 1.2;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .rf-section-nav-item:hover {
+      background: #eef2ff;
+      color: #4338ca;
+    }
+    .rf-section-nav-item.active {
+      background: #e0e7ff;
+      color: #3730a3;
+      border-color: #c7d2fe;
+      font-weight: 700;
+    }
+    .rf-section-nav-dot {
+      width: 5px;
+      height: 5px;
+      flex: 0 0 5px;
+      border-radius: 50%;
+      background: #cbd5e1;
+    }
+    .rf-section-nav-item.has-content .rf-section-nav-dot {
+      background: #10b981;
+    }
+    .rf-section-nav-item.active .rf-section-nav-dot {
+      background: #4f46e5;
+    }
+    .rf-section-nav-item > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rf-section-scroll {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100%;
+    }
+    .rf-section-scroll > .rf-form-group,
+    .rf-section-scroll > .rf-sub-card,
+    .rf-section-scroll > .rf-grid-2,
+    .rf-section-scroll > .rf-grid-3,
+    .rf-section-scroll > .rf-btn-add,
+    .rf-section-scroll > .rf-form-control,
+    .rf-section-scroll > div {
+      scroll-margin-top: 10px;
+    }
+    @media (max-width: 440px) {
+      .rf-section-nav { flex-basis: 88px; width: 88px; }
+      .rf-section-nav-item { font-size: 9.5px; padding-left: 4px; padding-right: 4px; }
+      .rf-card-body { padding-left: 8px; padding-right: 8px; }
+    }
+
+    /* 全局 Toast 提示 (穿透所有层级，居中浮动) */
 
     /* 站点密码保存与备忘展示区 */
     .rf-pwd-site-banner {

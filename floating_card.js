@@ -1288,7 +1288,99 @@
       word-break: break-all;
     }
     .rf-pwd-status.ok { background: var(--success-light); color: #047857; }
-    .rf-pwd-status.warn { background: #fffbeb; color: #b45309; }
+    /* 左侧分块快速导航布局 */
+    .rf-tab-panel.active {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 10px;
+      min-height: 100%;
+    }
+    .rf-section-nav {
+      flex: 0 0 104px;
+      width: 104px;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 4px 3px;
+      max-height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+      border-right: 1px solid #e2e8f0;
+    }
+    .rf-section-nav::-webkit-scrollbar { display: none; }
+    .rf-section-nav-item {
+      width: 100%;
+      min-height: 29px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 6px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: #64748b;
+      font-size: 10.5px;
+      line-height: 1.2;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .rf-section-nav-item:hover {
+      background: #eef2ff;
+      color: #4338ca;
+    }
+    .rf-section-nav-item.active {
+      background: #e0e7ff;
+      color: #3730a3;
+      border-color: #c7d2fe;
+      font-weight: 700;
+    }
+    .rf-section-nav-dot {
+      width: 5px;
+      height: 5px;
+      flex: 0 0 5px;
+      border-radius: 50%;
+      background: #cbd5e1;
+    }
+    .rf-section-nav-item.has-content .rf-section-nav-dot {
+      background: #10b981;
+    }
+    .rf-section-nav-item.active .rf-section-nav-dot {
+      background: #4f46e5;
+    }
+    .rf-section-nav-item > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rf-section-scroll {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100%;
+    }
+    .rf-section-scroll > .rf-form-group,
+    .rf-section-scroll > .rf-sub-card,
+    .rf-section-scroll > .rf-grid-2,
+    .rf-section-scroll > .rf-grid-3,
+    .rf-section-scroll > .rf-btn-add,
+    .rf-section-scroll > .rf-form-control,
+    .rf-section-scroll > div {
+      scroll-margin-top: 10px;
+    }
+    @media (max-width: 440px) {
+      .rf-section-nav { flex-basis: 88px; width: 88px; }
+      .rf-section-nav-item { font-size: 9.5px; padding-left: 4px; padding-right: 4px; }
+      .rf-card-body { padding-left: 8px; padding-right: 8px; }
+    }
+
+    /* 全局 Toast 提示 (穿透所有层级，居中浮动) */
 
     /* 站点密码保存与备忘展示区 */
     .rf-pwd-site-banner {
@@ -5392,6 +5484,155 @@
     });
 
 
+  // --- [src/card/10_section_navigation.js] ---
+// ==================== 标签页左侧分块快速导航 ====================
+// 统一为每个一级标签提供左侧锚点导航，右侧区域独立滚动；不改变原有字段、填写和复制事件。
+
+  const panelDefinitions = {
+    basic: [
+      { id: "basic-personal", label: "个人信息", target: () => shadow.querySelector('[data-key="basic.name"]') },
+      { id: "basic-contact", label: "联系方式", target: () => shadow.querySelector('[data-key="basic.phone"]') },
+      { id: "basic-location", label: "身份与所在地", target: () => shadow.querySelector('[data-key="basic.idCard"]') },
+      { id: "basic-links", label: "账号与链接", target: () => shadow.querySelector('[data-key="basic.website"]') },
+      { id: "basic-intent", label: "求职信息", target: () => shadow.querySelector('[data-key="basic.jobIntent"]') },
+      { id: "basic-family", label: "家庭关系", target: () => shadow.getElementById("rf-family-list") },
+      { id: "basic-summary", label: "自我评价", target: () => shadow.querySelector('[data-key="basic.selfEval"]') }
+    ],
+    education: [
+      { id: "education-top", label: "教育经历总览", target: () => shadow.getElementById("rf-edu-list") },
+      { id: "education-add", label: "新增教育经历", target: () => shadow.getElementById("rf-btn-add-edu") }
+    ],
+    internship: [
+      { id: "internship-top", label: "实习经历总览", target: () => shadow.getElementById("rf-intern-list") },
+      { id: "internship-add", label: "新增工作实习", target: () => shadow.getElementById("rf-btn-add-intern") }
+    ],
+    project: [
+      { id: "project-top", label: "项目经历总览", target: () => shadow.getElementById("rf-proj-list") },
+      { id: "project-add", label: "新增项目经历", target: () => shadow.getElementById("rf-btn-add-proj") }
+    ],
+    skills: [
+      { id: "skills-main", label: "专业技能", target: () => shadow.querySelector('[data-key="skills"]') },
+      { id: "skills-language", label: "语言能力", target: () => shadow.querySelector('[data-key="languages"]') },
+      { id: "skills-honors", label: "荣誉奖项", target: () => shadow.getElementById("rf-honor-list") },
+      { id: "skills-add-honor", label: "新增荣誉", target: () => shadow.getElementById("rf-btn-add-honor") }
+    ],
+    "paper-comp": [
+      { id: "comp-main", label: "竞赛经历", target: () => shadow.getElementById("rf-comp-list") },
+      { id: "comp-add", label: "新增赛事", target: () => shadow.getElementById("rf-btn-add-comp") },
+      { id: "paper-main", label: "论文 / 专利", target: () => shadow.getElementById("rf-paper-list") },
+      { id: "paper-add", label: "新增论文", target: () => shadow.getElementById("rf-btn-add-paper") }
+    ],
+    "ai-config": [
+      { id: "ai-protocol", label: "模型协议", target: () => shadow.getElementById("rf-ai-protocol") },
+      { id: "ai-endpoint", label: "服务地址", target: () => shadow.getElementById("rf-ai-base-url") },
+      { id: "ai-key", label: "API Key", target: () => shadow.getElementById("rf-ai-api-key") },
+      { id: "ai-model", label: "模型名称", target: () => shadow.getElementById("rf-ai-model") },
+      { id: "ai-test", label: "连接测试", target: () => shadow.getElementById("rf-btn-test-api") },
+      { id: "ai-audit", label: "诊断日志", target: () => shadow.getElementById("rf-agent-log-summary") }
+    ]
+  };
+
+  function panelKey(panel) {
+    return panel.id.replace(/^panel-/, "");
+  }
+
+  function getDynamicDefinitions(key, panel) {
+    let list = [];
+    if (key === "education") list = Array.from(panel.querySelectorAll("#rf-edu-list > .rf-sub-card"));
+    if (key === "internship") list = Array.from(panel.querySelectorAll("#rf-intern-list > .rf-sub-card"));
+    if (key === "project") list = Array.from(panel.querySelectorAll("#rf-proj-list > .rf-sub-card"));
+    if (key === "skills") list = Array.from(panel.querySelectorAll("#rf-honor-list > .rf-sub-card"));
+    if (key === "paper-comp") {
+      list = [
+        ...Array.from(panel.querySelectorAll("#rf-comp-list > .rf-sub-card")),
+        ...Array.from(panel.querySelectorAll("#rf-paper-list > .rf-sub-card"))
+      ];
+    }
+    return list.map((card, index) => {
+      const title = card.querySelector(".rf-sub-card-title")?.textContent?.trim() || `记录 ${index + 1}`;
+      const id = `${key}-record-${index}`;
+      card.dataset.rfSectionId = id;
+      return {
+        id,
+        label: title.length > 16 ? `${title.slice(0, 15)}…` : title,
+        target: () => shadow.querySelector(`[data-rf-section-id="${id}"]`)
+      };
+    });
+  }
+
+  function sectionHasContent(target) {
+    if (!target) return false;
+    if (target.matches?.("input, textarea, select")) return !!String(target.value || "").trim();
+    return !!target.querySelector?.("input:not([type='file']), textarea, select") &&
+      Array.from(target.querySelectorAll("input:not([type='file']), textarea, select")).some(el => String(el.value || "").trim());
+  }
+
+  function buildPanel(panel) {
+    if (!panel.classList.contains("rf-tab-panel")) return;
+    const key = panelKey(panel);
+    let scroll = Array.from(panel.children).find(el => el.classList.contains("rf-section-scroll"));
+    let nav = Array.from(panel.children).find(el => el.classList.contains("rf-section-nav"));
+    if (!scroll) {
+      scroll = document.createElement("div");
+      scroll.className = "rf-section-scroll";
+      while (panel.firstChild) scroll.appendChild(panel.firstChild);
+      nav = document.createElement("nav");
+      nav.className = "rf-section-nav";
+      panel.append(nav, scroll);
+    }
+
+    const defs = [...(panelDefinitions[key] || []), ...getDynamicDefinitions(key, scroll)];
+    nav.innerHTML = defs.map(def => `<button type="button" class="rf-section-nav-item" data-rf-nav-id="${def.id}"><span class="rf-section-nav-dot"></span><span>${def.label}</span></button>`).join("");
+    const items = Array.from(nav.querySelectorAll(".rf-section-nav-item"));
+    items.forEach((item, index) => {
+      item.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const def = defs[index];
+        const target = def.target();
+        if (!target) return;
+        target.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+        items.forEach(i => i.classList.remove("active"));
+        item.classList.add("active");
+      });
+      const target = defs[index].target();
+      if (sectionHasContent(target)) item.classList.add("has-content");
+    });
+
+    const updateActive = () => {
+      const scrollRect = scroll.getBoundingClientRect();
+      let bestIndex = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      defs.forEach((def, index) => {
+        const target = def.target();
+        if (!target) return;
+        const distance = Math.abs(target.getBoundingClientRect().top - scrollRect.top - 12);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestIndex = index;
+        }
+      });
+      items.forEach((item, index) => item.classList.toggle("active", index === bestIndex));
+    };
+    scroll.onscroll = updateActive;
+    updateActive();
+  }
+
+  function refreshSectionNavigation() {
+    shadow.querySelectorAll(".rf-tab-panel").forEach(buildPanel);
+  }
+
+  // updateAllViews 会在数据加载、版本切换、增删经历时调用；每次刷新导航以同步动态记录。
+
+
+
+setTimeout(() => {
+  try { refreshSectionNavigation(); } catch (err) { console.warn("OfferGo section navigation init failed", err); }
+}, 0);
+window.__offerGoRefreshSectionNavigation = refreshSectionNavigation;
+// 初始化后通过全局调用，供生命周期模块在数据渲染完成后重建导航。
+window.__offerGoSectionNav = { refresh: refreshSectionNavigation };
+
+
   // --- [src/card/09_lifecycle.js] ---
 // 20. 监听 background 发来的消息 (展开切换 & Agent 状态广播)
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
@@ -5537,5 +5778,8 @@
   // 初始化加载
   loadData().then(() => {
     initEvents();
+    window.__offerGoSectionNav?.refresh?.();
   });
 })();
+
+// 初始化分块导航需在卡片模板、动态列表和数据加载完成后执行。

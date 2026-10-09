@@ -69,7 +69,7 @@ function buildCard() {
   const p7_interactions = readFile(path.join(dir, '07_interactions.js'));
   const p8_password = readFile(path.join(dir, '08_password_card.js'));
   const p9_lifecycle = readFile(path.join(dir, '09_lifecycle.js'));
-
+  const p10_navigation = readFile(path.join(dir, '10_section_navigation.js'));
   const chunks = [
     p1_init,
     '  // --- [src/card/styles.css] ---',
@@ -105,6 +105,9 @@ function buildCard() {
     '',
     '  // --- [src/card/08_password_card.js] ---',
     p8_password,
+    '',
+    '  // --- [src/card/10_section_navigation.js] ---',
+    p10_navigation,
     '',
     '  // --- [src/card/09_lifecycle.js] ---',
     p9_lifecycle

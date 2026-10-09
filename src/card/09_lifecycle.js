@@ -142,5 +142,8 @@
   // 初始化加载
   loadData().then(() => {
     initEvents();
+    window.__offerGoSectionNav?.refresh?.();
   });
 })();
+
+// 初始化分块导航需在卡片模板、动态列表和数据加载完成后执行。
