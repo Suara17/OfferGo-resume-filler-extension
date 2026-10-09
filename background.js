@@ -939,7 +939,7 @@ async function handleTypeSafeJevCall({ prompt, systemPrompt, meta = {}, apiConfi
     "Authorization": `Bearer ${apiConfig.apiKey}`
   };
   if (isOpenRouter) {
-    headers["HTTP-Referer"] = "https://github.com/Suara17/resume-filler-extension";
+    headers["HTTP-Referer"] = "https://github.com/Suara17/OfferGo-resume-filler-extension";
     headers["X-Title"] = "OfferGo";
   }
 

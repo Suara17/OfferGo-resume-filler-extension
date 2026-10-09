@@ -57,14 +57,14 @@
 ## 🛠️ 安装与使用指南
 
 ### 方式一：直接下载 Release 安装包（推荐）
-1. 前往 GitHub 右侧 **[Releases](https://github.com/Suara17/resume-filler-extension/releases)** 下载最新版 `OfferGo-v1.1.0.zip` 并解压；
+1. 前往 GitHub 右侧 **[Releases](https://github.com/Suara17/OfferGo-resume-filler-extension/releases)** 下载最新版 `OfferGo-v1.1.0.zip` 并解压；
 2. 打开 Chrome / Edge 浏览器，在地址栏输入 `chrome://extensions/`；
 3. 开启右上角 **「开发者模式」**；
 4. 点击左上角 **「加载已解压的扩展程序」**，选择刚刚解压的目录即可。
 
 ### 方式二：源码安装与二次开发
 ```bash
-git clone https://github.com/Suara17/resume-filler-extension.git
+git clone https://github.com/Suara17/OfferGo-resume-filler-extension.git
 ```
 本项目源码已重构为**零依赖模块化架构**（业务逻辑分拆在 `src/` 各子目录中，样式与模板完全独立）：
 ```bash
